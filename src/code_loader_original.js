@@ -99,6 +99,7 @@ const configuration = {
     onItemDropCreated: [],
     onPlayerStartChargingItem: [],
     onPlayerFinishChargingItem: [],
+    onPlayerFinishQTE: [],
     doPeriodicSave: [],
   },
 
@@ -266,6 +267,7 @@ const configuration = {
     const styledText = _STYLES[type];
     styledText[0].str = message;
     _broadcastMessage(styledText);
+    styledText[0].str = "";
   };
 
   const _establish = () => {
@@ -1243,4 +1245,4 @@ const configuration = {
   void 0;
 }
 
-// 08/02/2026
+// 17/02/2026

@@ -90,6 +90,7 @@ const configuration={
     onItemDropCreated: [],
     onPlayerStartChargingItem: [],
     onPlayerFinishChargingItem: [],
+    onPlayerFinishQTE: [],
     doPeriodicSave: [],
   },
   STYLES:[
@@ -232,7 +233,8 @@ const configuration={
   const _log=(message,type)=>{
     let styledText=_STYLES[type];
     styledText[0].str=message;
-    _broadcastMessage(styledText)
+    _broadcastMessage(styledText);
+    styledText[0].str=""
   },
   _establish=()=>{
     let JM_config=_CF.join_manager,
@@ -1070,4 +1072,4 @@ const configuration={
   void 0
 }
 
-// 08/02/2026
+// 17/02/2026

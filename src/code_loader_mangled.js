@@ -90,6 +90,7 @@ const configuration={
     onItemDropCreated: [],
     onPlayerStartChargingItem: [],
     onPlayerFinishChargingItem: [],
+    onPlayerFinishQTE: [],
     doPeriodicSave: [],
   },
   STYLES:[
@@ -232,7 +233,8 @@ const configuration={
   const $=(A,B)=>{
     let C=_J[B];
     C[0].str=A;
-    _I(C)
+    _I(C);
+    C[0].str=""
   },
   $A=()=>{
     let B=A.join_manager,
@@ -1127,4 +1129,4 @@ _OM_bootDelayTicks
 _log
 */
 
-// 08/02/2026
+// 17/02/2026

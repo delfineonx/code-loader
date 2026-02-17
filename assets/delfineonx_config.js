@@ -111,6 +111,7 @@ onPlayerRequestChunk: [],
 onItemDropCreated: [],
 onPlayerStartChargingItem: [],
 onPlayerFinishChargingItem: [],
+onPlayerFinishQTE: [],
 doPeriodicSave: [],
 },
 STYLES:[
