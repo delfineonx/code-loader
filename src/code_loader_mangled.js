@@ -1,7 +1,7 @@
+// Code Loader v2026-02-24-0001
+// Interruption Framework v2026-02-24-0001
 // Copyright (c) 2025-2026 delfineonx
-// This product includes "Code Loader" created by delfineonx.
-// This product includes "Interruption Framework" created by delfineonx.
-// Licensed under the Apache License, Version 2.0.
+// SPDX-License-Identifier: Apache-2.0
 
 const configuration={
   ACTIVE_EVENTS:[
@@ -91,6 +91,7 @@ const configuration={
     onPlayerStartChargingItem: [],
     onPlayerFinishChargingItem: [],
     onPlayerFinishQTE: [],
+    onPlayerBoughtShopItem: [],
     doPeriodicSave: [],
   },
   STYLES:[
@@ -540,6 +541,7 @@ const configuration={
       try{
         if(!K[L]()){break}
       }catch(C){
+        M=1;
         $(J+"Task error on tick - "+C.name+": "+C.message,0)
       }
       B=++L<A
@@ -1129,4 +1131,3 @@ _OM_bootDelayTicks
 _log
 */
 
-// 17/02/2026

@@ -37,7 +37,7 @@
   </p>
 
   <h3>
-    <a href="https://github.com/delfineonx/code-loader/blob/main/src/code_loader_minified.js">
+    <a href="./src/code_loader_minified.js">
       <code><b>minified version</b></code>
     </a>
   </h3>
@@ -1010,12 +1010,12 @@ eventName = (...args) => {
 
   <ul>
     <li>
-      <a href="https://github.com/delfineonx/code-loader/blob/main/assets/delfineonx_example.bloxdschem">
+      <a href="./assets/delfineonx_example.bloxdschem">
         <code><b>example .bloxdschem</b></code>
       </a>
     </li>
     <li>
-      <a href="https://github.com/delfineonx/code-loader/blob/main/assets/delfineonx_config.js">
+      <a href="./assets/delfineonx_config.js">
         <code><b>config .js</b></code>
       </a>
   </ul>
@@ -1113,5 +1113,22 @@ eventName = (...args) => {
   <li>Licensed under the Apache License, Version 2.0</li>
   <li>Includes <code>Interruption Framework</code> by delfineonx</li>
 </ul>
+
+<a id="license-and-credits"></a>
+<details open>
+  <summary>
+    <div align="center">
+      <h2>❮ <code><b>👥 License & Credits 👥</b></code> ❯</h2>
+    </div>
+  </summary>
+
+```js
+// Code Loader v2026-02-24-0001
+// Interruption Framework v2026-02-24-0001
+// Copyright (c) 2025-2026 delfineonx
+// SPDX-License-Identifier: Apache-2.0
+```
+
+</details>
 
 ---
