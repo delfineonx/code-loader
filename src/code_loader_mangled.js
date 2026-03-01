@@ -1,1049 +1,993 @@
-// Code Loader v2026-02-24-0001
-// Interruption Framework v2026-02-24-0001
+// Code Loader v2026-02-29-0001
+// Interruption Framework v2026-02-29-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
 
-const configuration={
-  ACTIVE_EVENTS:[
+const configuration = {
+  EVENTS: [
     /* ... */
   ],
-  BLOCKS:[
+  BLOCKS: [
     /* ... */
   ],
-  boot_manager:{
+  OM: {
     boot_delay_ms: 100,
-    show_boot_logs: true,
-    show_error_logs: true,
-    show_execution_logs: false,
+    show_boot_status: true,
+    show_errors: true,
+    show_execution_info: false,
   },
-  block_manager:{
+  BM: {
     is_chest_mode: false,
-    max_executions_per_tick: 8,
-    max_errors_count: 32,
+    execution_budget_per_tick: 8,
+    max_error_count: 32,
   },
-  join_manager:{
+  JM: {
     reset_on_reboot: true,
-    max_dequeue_per_tick: 16,
+    dequeue_budget_per_tick: 8,
   },
-  event_manager:{
-    is_framework_enabled: false,
-    default_retry_limit: 2,
-  },
-  EVENT_REGISTRY:{
-    tick: null,
-    onClose: [],
-    onPlayerJoin: [],
-    onPlayerLeave: [],
-    onPlayerJump: [],
-    onRespawnRequest: [[0,-10000,0]],
-    playerCommand: [undefined],
-    onPlayerChat: [null],
-    onPlayerChangeBlock: ["preventChange"],
-    onPlayerDropItem: ["preventDrop"],
-    onPlayerPickedUpItem: [],
-    onPlayerSelectInventorySlot: [],
-    onBlockStand: [],
-    onPlayerAttemptCraft: ["preventCraft"],
-    onPlayerCraft: [],
-    onPlayerAttemptOpenChest: ["preventOpen"],
-    onPlayerOpenedChest: [],
-    onPlayerMoveItemOutOfInventory: ["preventChange"],
-    onPlayerMoveInvenItem: ["preventChange"],
-    onPlayerMoveItemIntoIdxs: ["preventChange"],
-    onPlayerSwapInvenSlots: ["preventChange"],
-    onPlayerMoveInvenItemWithAmt: ["preventChange"],
-    onPlayerAttemptAltAction: ["preventAction"],
-    onPlayerAltAction: [],
-    onPlayerClick: [],
-    onClientOptionUpdated: [],
-    onMobSettingUpdated: [],
-    onInventoryUpdated: [],
-    onChestUpdated: [],
-    onWorldChangeBlock: ["preventChange"],
-    onCreateBloxdMeshEntity: [],
-    onEntityCollision: [],
-    onPlayerAttemptSpawnMob: ["preventSpawn"],
-    onWorldAttemptSpawnMob: ["preventSpawn"],
-    onPlayerSpawnMob: [],
-    onWorldSpawnMob: [],
-    onWorldAttemptDespawnMob: ["preventDespawn"],
-    onMobDespawned: [],
-    onPlayerAttack: [],
-    onPlayerDamagingOtherPlayer: ["preventDamage"],
-    onPlayerDamagingMob: ["preventDamage"],
-    onMobDamagingPlayer: ["preventDamage"],
-    onMobDamagingOtherMob: ["preventDamage"],
-    onAttemptKillPlayer: ["preventDeath"],
-    onPlayerKilledOtherPlayer: ["keepInventory"],
-    onMobKilledPlayer: ["keepInventory"],
-    onPlayerKilledMob: ["preventDrop"],
-    onMobKilledOtherMob: ["preventDrop"],
-    onPlayerPotionEffect: [],
-    onPlayerDamagingMeshEntity: [],
-    onPlayerBreakMeshEntity: [],
-    onPlayerUsedThrowable: [],
-    onPlayerThrowableHitTerrain: [],
-    onTouchscreenActionButton: [],
-    onTaskClaimed: [],
-    onChunkLoaded: [],
-    onPlayerRequestChunk: [],
-    onItemDropCreated: [],
-    onPlayerStartChargingItem: [],
-    onPlayerFinishChargingItem: [],
-    onPlayerFinishQTE: [],
-    onPlayerBoughtShopItem: [],
-    doPeriodicSave: [],
-  },
-  STYLES:[
-    "#FF775E","500","0.95rem",
-    "#FFC23D","500","0.95rem",
-    "#20DD69","500","0.95rem",
-    "#52B2FF","500","0.95rem"
-  ]
+  STYLES: [
+    "#FF775E", "500", "0.95rem",
+    "#FFC23D", "500", "0.95rem",
+    "#20DD69", "500", "0.95rem",
+    "#52B2FF", "500", "0.95rem",
+  ],
 };
 
-
 {
-  let A=configuration,
+  const A=configuration,
   B={
-    state:0,
-    fn:()=>{},
-    args:[],
-    limit:2,
-    phase:1048576,
-    cache:null,
-    default:1048576,
-    wasInterrupted:!1,
-    tick:null
+    en:0,
+    rcnt:0,
+    sid:0
   },
-  C={
-    create:null,
-    check:null,
-    build:null,
-    dispose:null
-  },
+  C={},
   D={
-    SM:null,
-    config:null,
     isPrimaryBoot:!0,
     isRunning:!1,
-    pointer:0,
-    reboot:null,
-    bootLogs:null,
-    errorLogs:null,
-    executionLogs:null,
-    completeLogs:null
+    cursor:0
   },
-  _A=eval,
-  _B=api.getBlock,
-  E=api.getBlockId,
-  _C=api.setBlock,
-  _D=api.getBlockData,
-  _E=api.getStandardChestItems,
-  _F=api.getStandardChestItemSlot,
-  F=api.setStandardChestItemSlot,
-  _G=api.setCallbackValueFallback,
-  _H=api.getPlayerIds,
-  _I=api.broadcastMessage,
-  G=function(){},
-  _J=[],
-  H="Code Loader",
-  _K=Object.create(null),
-  _L=[],
-  I=[],
-  _M=1,
-  _N=1,
-  _O=1,
-  _P=0,
-  J=H+" SM: ",
+  E=eval,
+  F=Math.floor,
+  G=api.getBlockId,
+  H=api.getBlockData,
+  I=api.getStandardChestItems,
+  J=Object.freeze(function(){}),
   K=[],
-  L=0,
-  M=1,
-  _Q="Bedrock",
-  N="Boat",
-  _R={customAttributes:{_:null}},
-  _S={customAttributes:{_:[]}},
-  O=_S.customAttributes._,
-  P=[],
-  _T,
-  _U,
-  _V,
-  _W,
-  _X,
-  _Y,
-  _Z,
-  _a,
-  _b,
-  Q,
-  R,
-  _c,
-  S,
-  _d,
-  T,
-  U,
-  V,
-  W,
-  _e=H+" EM: ",
-  X=Object.create(null),
-  Y=Object.create(null),
-  _f=!1,
-  _g=null,
-  Z=[],
-  a=[],
-  _h=0,
-  b,
-  c,
-  d,
-  e,
-  f,
-  _i=H+" JM: ",
-  _j,
-  g,
-  h,
-  i=[],
-  j={},
-  k,
-  _k=H+" BM: ",
-  _l,
-  l,
-  m=[null],
-  n,
-  o,
-  p,
-  _m,
-  q,
-  _n,
-  r,
-  s,
-  _o,
-  t,
-  u,
-  v,
-  _p,
-  _q=H+" OM: ",
-  _=-2,
-  w=!0,
-  x=-1,
-  y=!1,
-  z,
-  _r,
-  _s,
-  _t,
-  _u;
-
+  L="Code Loader";
   const $=(A,B)=>{
-    let C=_J[B];
+    let C=K[B];
     C[0].str=A;
-    _I(C);
+    api.broadcastMessage(C);
     C[0].str=""
   },
   $A=()=>{
-    let B=A.join_manager,
-    C=A.block_manager,
-    D=A.boot_manager;
-    d=0;
-    e=G;
-    f=G;
-    if(b){
-      _j=!!B.reset_on_reboot;
-      g=B.max_dequeue_per_tick|0;
-      g=(g&~(g>>31))+(-g>>31)+1;
-      h=G;
-      if(!w){
-        i.length=0;
-        if(_j){j={}}
+    let B=A.JM,
+    C=A.BM,
+    D=A.OM;
+    V=0;
+    W=J;
+    X=J;
+    if(T){
+      Y=!!B.reset_on_reboot;
+      Z=B.dequeue_budget_per_tick|0;
+      Z=(Z&~(Z>>31))+(-Z>>31)+1;
+      a=J;
+      if(!v){
+        b.length=0;
+        if(Y){
+          c={}
+        }
       }
-      k=0
+      d=0
     }
-    l=A.BLOCKS instanceof Array?A.BLOCKS:[];
-    n=!!C.is_chest_mode;
-    o=C.max_executions_per_tick|0;
-    o=(o&~(o>>31))+(-o>>31)+1;
-    p=C.max_errors_count|0;
-    p=p&~(p>>31);
-    m.length=1;
-    m[0]=null;
-    _m=0;
-    q=0;
-    _n=l.length;
-    if(n){
-      r=!1;
-      s={};
-      _o=1;
-      t=0;
-      u=0
+    f=A.BLOCKS instanceof Array?A.BLOCKS:[];
+    h=!!C.is_chest_mode;
+    i=C.execution_budget_per_tick|0;
+    i=(i&~(i>>31))+(-i>>31)+1;
+    j=C.max_error_count|0;
+    j=j&~(j>>31);
+    g.length=1;
+    g[0]=null;
+    k=0;
+    l=0;
+    m=f.length;
+    if(h){
+      n=!1;
+      o={};
+      r=1;
+      s=0;
+      t=0
     }
-    z=(D.boot_delay_ms|0)*.02|0;
-    z=z&~(z>>31);
-    _r=!!D.show_boot_logs;
-    _s=!!D.show_error_logs;
-    _t=!!D.show_execution_logs;
-    _u=-1
-  },
-  $B=()=>{
-    B.state=0;
-    if(!_P){
-      B.args=_L;
-      B.cache=null;
-      return
-    }
-    _M=0;
-    B.wasInterrupted=!0;
-    while(_O<_N){
-      I=_K[_O];
-      if(I[2]>0){
-        I[2]--;
-        B.phase=I[3];
-        B.cache=I[4];
-        I[0](...I[1])
-      }
-      delete _K[_O++];
-      _P--
-    }
-    B.state=0;
-    B.args=_L;
-    B.cache=null;
-    B.wasInterrupted=!1;
-    _M=1
-  },
-  $C=(A,B)=>{
-    let C=A[0],
-    D=A[1],
-    G=A[2],
-    H=B[0],
-    I=B[1],
-    K=B[2];
-    if(C>H||D>I||G>K){
-      $(J+"Invalid region bounds. lowPos must be <= highPos on all axes.",1);
-      return !0
-    }
-    if(E(C,D,G)===1){return !1}
-    _C(C,D,G,_Q);
-    F([C,D,G],0,N,null,void 0,{
-      customAttributes:{
-        region:[C,D,G,H,I,K]
-      }
-    });
-    $(J+"Registry unit created at ("+C+", "+D+", "+G+").",2);
-    return !0
-  },
-  $D=A=>{
-    if(E(A[0],A[1],A[2])===1){return !1}
-    let B=_F(A,0)?.attributes?.customAttributes?.region;
-    if(!B){
-      $(J+"No valid registry unit found.",1)
-    }else{
-      $(J+"Storage covers region from ("+B[0]+", "+B[1]+", "+B[2]+") to ("+B[3]+", "+B[4]+", "+B[5]+").",3)
-    }
-    return !0
-  },
-  $E=(A,B,C)=>{
-    if(M===1){
-      if(E(A[0],A[1],A[2])===1){return !1}
-      let D=_F(A,0)?.attributes?.customAttributes?.region;
-      if(!D){
-        $(J+"No valid registry unit found.",1);
-        return !0
-      }
-      _T=D[0];
-      _U=D[1];
-      _V=D[2];
-      _W=D[3];
-      _X=D[4];
-      _Y=D[5];
-      let G=(_W-_T+1)*(_X-_U+1)*(_Y-_V+1)-1,
-      H=B.length+3>>2;
-      if(G<H){
-        $(J+"Not enough space. Need "+H+" storage units, but region holds "+G+".",0);
-        return !0
-      }
-      _Z=_T;
-      _a=_U;
-      _b=_V;
-      Q={};
-      S=0;
-      T=1;
-      W=0;
-      M=2
-    }
-    let I=_Z,
-    K=_a,
-    L=_b,
-    R=C,
-    U=B.length,
-    V,X,Y,Z,a,b,c,d,e,
-    f,g,h,i,j,k,l,m;
-    while(S<U){
-      if(M===2){
+    y=(D.boot_delay_ms|0)*.02|0;
+    y=y&~(y>>31);
+    _D=!!D.show_boot_status;
+    _E=!!D.show_errors;
+    _F=!!D.show_execution_info;
+    z=-1
+  };
+  { // B, $
+    const A=B,
+    C=A.fn=Object.freeze(()=>{}),
+    D=A.args=A.noArgs=Object.freeze([]),
+    E=[null,D,null,0],
+    F=[];
+    let G=E,
+    H=1,
+    I=0,
+    J=0,
+    K=0;
+    A.tick=()=>{
+      A.fn=C;
+      A.args=D;
+      if(!K){return}
+      H=0;
+      let L=null;
+      while(K){
+        G=F[I];
+        A.args=G[1];
+        A.rcnt=++G[2];
+        A.sid=G[3];
+        try{
+          G[0](...A.args)
+        }catch(M){
+          L=M
+        }
+        F[I]=void 0;
         I++;
-        if(I>_W){
-          I=_T;
-          L++;
-          if(L>_Y){
-            L=_V;
-            K++;
-            if(K>_X){
-              $(J+"Region overflow on storage build at ("+A[0]+", "+A[1]+", "+A[2]+").",0);
-              return !0
-            }
-          }
+        K--;
+        if(L){
+          $("Interruption Framework ["+(G[0]?.name||"<anonymous>")+"]: "+L.name+": "+L.message,0);
+          L=null
         }
-        j=(I>>5)+"|"+(K>>5)+"|"+(L>>5);
-        if(!Q[j]){
-          if(E(I,K,L)===1){return !1}
-          Q[j]=!0
-        }
-        _C(I,K,L,_Q);
-        _Z=I;
-        _a=K;
-        _b=L;
-        _c=[I,K,L];
-        _d=0;
-        M=3
       }
-      while(_d<4&&S<U){
-        if(M===3){
-          f=B[S];
-          g=f[0];
-          h=f[1];
-          i=f[2];
-          j=(g>>5)+"|"+(h>>5)+"|"+(i>>5);
-          if(!Q[j]){
-            if(E(g,h,i)===1){return !1}
-            Q[j]=!0
+      I=0;
+      J=0;
+      F.length=0;
+      G=E;
+      A.en=0;
+      A.fn=C;
+      A.args=D;
+      A.rcnt=0;
+      H=1
+    };
+    Object.defineProperty(globalThis.InternalError.prototype,"name",{
+      configurable:!0,
+      get:()=>{
+        if(H){
+          if(A.en){
+            A.en=0;
+            F[J]=[A.fn,A.args,0,A.sid];
+            J++;
+            K++
           }
-          V=_D(g,h,i)?.persisted?.shared?.text;
-          if(V?.length>0){
-            l=0;
-            X=0;
-            Y=0;
-            Z=JSON.stringify(V);
-            a=1;
-            b=Z.length-1;
-            while(a<b){
-              c=a+1950;
-              if(c>b){c=b}
-              c-=Z[c-1]==="\\";
-              while(a<c){
-                d=Z.indexOf("\\",a);
-                if(d===-1||d>=c){
-                  e=c-a;
-                  a+=e;
-                  Y+=e;
-                  break
-                }
-                if(d>a){
-                  e=d-a;
-                  a+=e;
-                  Y+=e
-                }
-                a+=2;
-                Y+=1
-              }
-              P[l++]=V.slice(X,Y);
-              X=Y
-            }
-            P.length=l;
-            M=4
-          }
+        }else{
+          A.en=0;
+          A.rcnt=0;
+          G[1]=A.args;
+          G[3]=A.sid;
+          G=E;
+          A.args=D;
+          H=1
         }
-        if(M===4){
-          k=_d*9;
-          l=0;
-          m=P.length;
-          while(l<m){
-            _R.customAttributes._=P[l];
-            F(_c,k+l,N,null,void 0,_R);
-            l++
-          }
-          _d++;
-          M=3
-        }
-        S++
+        return"InternalError"
       }
-      if(W>=243){
-        F(A,T,N,null,void 0,_S);
-        O.length=0;
-        W=0;
-        T++
+    })
+  }
+  let _A,
+  _B;
+  { // C, F, G, H, I, L, $, _A, _B
+    let A=api.setBlock,
+    B=api.getStandardChestItemSlot,
+    D=api.setStandardChestItemSlot,
+    E=L+" SM: ",
+    J=_A=[],
+    K=0,
+    M=1,
+    N="Bedrock",
+    O="Boat",
+    P={customAttributes:{_:null}},
+    Q={customAttributes:{_:[]}},
+    R=Q.customAttributes._,
+    S=[],
+    T,
+    U,
+    V,
+    W,
+    X,
+    Y,
+    Z,
+    a,
+    b,
+    c,
+    d,
+    e,
+    f,
+    g,
+    h,
+    i,
+    j,
+    k,
+    l;
+    const $A=A=>{
+      if(!A?.length||A.length<3){
+        $(E+"Invalid registry position. Expected registryPos as [x, y, z].",1);
+        return null
       }
-      O[W++]=I;
-      O[W++]=K;
-      O[W++]=L;
-      M=2;
-      R--;
-      if(R<=0){return !1}
-    }
-    F(A,T,N,null,void 0,_S);
-    _R.customAttributes._=null;
-    O.length=0;
-    P.length=0;
-    Q=null;
-    _c=null;
-    $(J+"Built storage at ("+A[0]+", "+A[1]+", "+A[2]+").",2);
-    M=1;
-    return !0
-  },
-  $F=(A,B)=>{
-    if(M===1){
-      if(E(A[0],A[1],A[2])===1){return !1}
-      R=_E(A);
-      if(!R[0]?.attributes?.customAttributes?.region){
-        $(J+"No valid registry unit found.",1);
-        R=null;
+      let C=F(A[0])|0,
+      D=F(A[1])|0,
+      H=F(A[2])|0;
+      if(G(C,D,H)===1){return !1}
+      let I=[C,D,H],
+      J=B(I,0)?.attributes?.customAttributes?.region;
+      if(!J){
+        $(E+"No valid registry unit found at ("+C+", "+D+", "+H+").",1);
+        return null
+      }
+      return[I,J]
+    },
+    $B=(B,C)=>{
+      if(!B?.length||!C?.length||B.length<3||C.length<3){
+        $(E+"Invalid region positions. Expected lowPos and highPos as [x, y, z].",1);
         return !0
       }
-      Q={};
-      T=1;
-      V=0;
-      M=2
-    }
-    let C=B,
-    D,G,H,I,K;
-    while(D=R[T]){
-      if(M===2){
-        U=D.attributes.customAttributes._;
-        V=0;
-        W=U.length;
-        M=3
+      let H=F(B[0])|0,
+      I=F(B[1])|0,
+      J=F(B[2])|0,
+      K=F(C[0])|0,
+      L=F(C[1])|0,
+      M=F(C[2])|0;
+      if(H>K||I>L||J>M){
+        $(E+"Invalid region bounds. lowPos ["+H+", "+I+", "+J+"] must be <= highPos ["+K+", "+L+", "+M+"] on all axes.",1);
+        return !0
       }
-      if(M===3){
-        while(V<W){
-          G=U[V];
-          H=U[V+1];
-          I=U[V+2];
-          K=(G>>5)+"|"+(H>>5)+"|"+(I>>5);
-          if(!Q[K]){
-            if(E(G,H,I)===1){return !1}
-            Q[K]=!0
-          }
-          _C(G,H,I,"Air");
-          V+=3;
-          C--;
-          if(C<=0){return !1}
+      if(G(H,I,J)===1){return !1}
+      A(H,I,J,N);
+      D([H,I,J],0,O,null,void 0,{
+        customAttributes:{
+          region:[H,I,J,K,L,M]
         }
-        F(A,T,"Air");
-        T++;
+      });
+      $(E+"Registry unit created at ("+H+", "+I+", "+J+").",2);
+      return !0
+    },
+    $C=A=>{
+      let B=$A(A);
+      if(B===!1){return !1}
+      if(B===null){return !0}
+      let C=B[1];
+      $(E+"Storage covers region from ("+C[0]+","+C[1]+","+C[2]+") to ("+C[3]+","+C[4]+","+C[5]+").",3);
+      return !0
+    },
+    $D=(B,C,I)=>{
+      if(M===1){
+        let A=$A(B);
+        if(A===!1){return !1}
+        if(A===null){return !0}
+        let D=A[1];
+        Y=D[0];
+        Z=D[1];
+        a=D[2];
+        b=D[3];
+        c=D[4];
+        d=D[5];
+        let F=(b-Y+1)*(c-Z+1)*(d-a+1)-1,
+        G=C.length+3>>2;
+        if(F<G){
+          $(E+"Not enough space. Need "+G+" storage units, but region holds "+F+".",0);
+          return !0
+        }
+        U=A[0];
+        T={};
+        e=Y;
+        f=Z;
+        g=a;
+        h=0;
+        X=1;
+        l=0;
         M=2
       }
-    }
-    $(J+"Disposed storage at ("+A[0]+", "+A[1]+", "+A[2]+").",2);
-    Q=null;
-    R=null;
-    U=null;
-    M=1;
-    return !0
-  },
-  $G=()=>{
-    let A=K.length,
-    B=L<A;
-    while(B){
-      try{
-        if(!K[L]()){break}
-      }catch(C){
-        M=1;
-        $(J+"Task error on tick - "+C.name+": "+C.message,0)
+      let J=e,
+      K=f,
+      L=g,
+      W=I,
+      Z=C.length,
+      j,k,m,n,o,p,q,r,s,
+      t,u,v,w,x,y,z,_A;
+      while(h<Z){
+        if(M===2){
+          J++;
+          if(J>b){
+            J=Y;
+            L++;
+            if(L>d){
+              L=a;
+              K++;
+              if(K>c){
+                return !0
+              }
+            }
+          }
+          x=(J>>5)+"|"+(K>>5)+"|"+(L>>5);
+          if(!T[x]){
+            if(G(J,K,L)===1){return !1}
+            T[x]=!0
+          }
+          A(J,K,L,N);
+          e=J;
+          f=K;
+          g=L;
+          V=[J,K,L];
+          i=0;
+          M=3
+        }
+        while(i<4&&h<Z){
+          if(M===3){
+            t=C[h];
+            if(!t?.length||t.length<3){
+              h++;
+              continue
+            }
+            u=F(t[0])|0;
+            v=F(t[1])|0;
+            w=F(t[2])|0;
+            x=(u>>5)+"|"+(v>>5)+"|"+(w>>5);
+            if(!T[x]){
+              if(G(u,v,w)===1){return !1}
+              T[x]=!0
+            }
+            j=H(u,v,w)?.persisted?.shared?.text;
+            if(j?.length>0){
+              z=0;
+              k=0;
+              m=0;
+              n=JSON.stringify(j);
+              o=1;
+              p=n.length-1;
+              while(o<p){
+                q=o+1950;
+                if(q>p){q=p}
+                q-=n[q-1]==="\\";
+                while(o<q){
+                  r=n.indexOf("\\",o);
+                  if(r===-1||r>=q){
+                    s=q-o;
+                    o+=s;
+                    m+=s;
+                    break
+                  }
+                  if(r>o){
+                    s=r-o;
+                    o+=s;
+                    m+=s
+                  }
+                  o+=2;
+                  m+=1
+                }
+                S[z]=j.slice(k,m);
+                z++;
+                k=m
+              }
+              S.length=z;
+              M=4
+            }
+          }
+          if(M===4){
+            y=i*9;
+            z=0;
+            _A=S.length;
+            while(z<_A){
+              P.customAttributes._=S[z];
+              D(V,y+z,O,null,void 0,P);
+              z++
+            }
+            i++;
+            M=3
+          }
+          h++
+        }
+        if(l>=243){
+          D(U,X,O,null,void 0,Q);
+          R.length=0;
+          l=0;
+          X++
+        }
+        R[l++]=J;
+        R[l++]=K;
+        R[l++]=L;
+        M=2;
+        W--;
+        if(W<=0){return !1}
       }
-      B=++L<A
+      D(U,X,O,null,void 0,Q);
+      $(E+"Built storage at ("+U[0]+", "+U[1]+", "+U[2]+").",2);
+      P.customAttributes._=null;
+      R.length=0;
+      S.length=0;
+      T=null;
+      U=null;
+      V=null;
+      M=1;
+      return !0
+    },
+    $E=(B,C)=>{
+      if(M===1){
+        let A=$A(B);
+        if(A===!1){return !1}
+        if(A===null){return !0}
+        U=A[0];
+        T={};
+        W=I(U);
+        X=1;
+        k=0;
+        M=2
+      }
+      let F=C,
+      H,I,J,K,L;
+      while(H=W[X]){
+        if(M===2){
+          j=H.attributes.customAttributes._;
+          k=0;
+          l=j.length;
+          M=3
+        }
+        if(M===3){
+          while(k<l){
+            I=j[k];
+            J=j[k+1];
+            K=j[k+2];
+            L=(I>>5)+"|"+(J>>5)+"|"+(K>>5);
+            if(!T[L]){
+              if(G(I,J,K)===1){return !1}
+              T[L]=!0
+            }
+            A(I,J,K,"Air");
+            k+=3;
+            F--;
+            if(F<=0){
+              return !1
+            }
+          }
+          D(U,X,"Air");
+          X++;
+          M=2
+        }
+      }
+      $(E+"Disposed storage at ("+U[0]+", "+U[1]+", "+U[2]+").",2);
+      T=null;
+      U=null;
+      W=null;
+      j=null;
+      M=1;
+      return !0
+    };
+    C.create=(A,B)=>{
+      J[J.length]=()=>$B(A,B)
+    };
+    C.check=A=>{
+      J[J.length]=()=>$C(A)
+    };
+    C.build=(A,B,C=8)=>{
+      J[J.length]=()=>$D(A,B,C)
+    };
+    C.dispose=(A,B=32)=>{
+      J[J.length]=()=>$E(A,B)
+    };
+    _B=()=>{
+      let A=K<J.length;
+      while(A){
+        try{
+          if(!J[K]()){break}
+        }catch(B){
+          M=1;
+          $(E+"Task error on tick - "+B.name+": "+B.message,0)
+        }
+        A=++K<J.length
+      }
+      if(!A){
+        J.length=0;
+        K=0
+      }
     }
-    if(!B){
-      L=0;
-      K.length=0
-    }
-  },
-  $H=()=>{
-    if(_f){return}
-    let C=B,
-    D=A.EVENT_REGISTRY,
-    E=A.ACTIVE_EVENTS,
-    F=A.event_manager,
-    H=!!F.is_framework_enabled,
-    I=F.default_retry_limit|0;
-    I=(I&~(I>>31))+(-I>>31)+1;
-    let J=0,
-    K=E.length;
-    while(J<K){
-      let L=E[J];
-      if(L==="tick"){
-        J++;
+  }
+  let M=Object.create(null),
+  N=Object.create(null),
+  O=!1,
+  P=null,
+  Q=[],
+  R=[],
+  S=0,
+  T,
+  U,
+  V;
+  const $B=()=>{
+    if(O){return}
+    let C=A.EVENTS,
+    D=C.length,
+    E=0,
+    F;
+    while(E<D){
+      F=C[E];
+      let G,H,I;
+      if(typeof F==="string"){
+        G=F
+      }else{
+        G=F[0];
+        H=!!F[1];
+        I=F[2]
+      }
+      if(G==="tick"){
+        E++;
         continue
       }
-      let M=D[L];
-      if(M===void 0){
-        Z[Z.length]=L;
-        J++;
-        continue
-      }
-      if(!(M instanceof Array)){
-        M=D[L]=[]
-      }
-      let N=!!M[1];
-      if(L!=="onPlayerJoin"){
-        a[a.length]=L;
-        let O=G;
-        X[L]=P=>{O=P instanceof Function?P:G};
-        Y[L]=()=>O;
-        if(H&&N){
-          let Q=M[2];
-          if(Q==null){Q=I}
-          Q|=0;
-          globalThis[L]=function(R,S,T,U,V,W,c,d,e){
-            C.state=1;
-            C.fn=O;
-            C.args=[R,S,T,U,V,W,c,d,e];
-            C.limit=Q;
-            C.phase=1048576;
+      if(G!=="onPlayerJoin"){
+        Q[Q.length]=G;
+        R[R.length]=I;
+        let K=J;
+        M[G]=L=>{K=typeof L==="function"?L:J};
+        N[G]=()=>K;
+        if(H){
+          const P=B;
+          globalThis[G]=function(S,V,W,X,Y,Z,a,b,c){
+            P.en=1;
+            P.fn=K;
+            P.args=[S,V,W,X,Y,Z,a,b,c];
+            P.sid=0;
             try{
-              return O(R,S,T,U,V,W,c,d,e)
+              return K(S,V,W,X,Y,Z,a,b,c)
             }finally{
-              C.state=0
+              P.en=0
             }
           }
         }else{
-          globalThis[L]=function(R,S,T,U,V,W,c,d,e){
-            return O(R,S,T,U,V,W,c,d,e)
+          globalThis[G]=function(P,S,V,W,X,Y,Z,a,b){
+            return K(P,S,V,W,X,Y,Z,a,b)
           }
         }
       }else{
-        b=$N;
-        X.onPlayerJoin=f=>{b=f instanceof Function?f:G};
-        Y.onPlayerJoin=()=>b;
-        if(H&&N){
-          let g=M[2];
-          if(g==null){g=I}
-          g|=0;
-          globalThis.onPlayerJoin=function(h,i){
-            C.state=1;
-            C.fn=b;
-            C.args=[h,i];
-            C.limit=g;
-            C.phase=1048576;
+        T=$H;
+        M.onPlayerJoin=K=>{T=typeof K==="function"?K:J};
+        N.onPlayerJoin=()=>T;
+        if(H){
+          const L=B;
+          globalThis.onPlayerJoin=function(P,S){
+            L.en=1;
+            L.fn=T;
+            L.args=[P,S];
+            L.sid=0;
             try{
-              return b(h,i)
+              return T(P,S)
             }finally{
-              C.state=0
+              L.en=0
             }
           }
         }else{
-          globalThis[L]=function(h,i){
-            return b(h,i)
+          globalThis[G]=function(L,P){
+            return T(L,P)
           }
         }
       }
-      J++
+      E++
     }
+    M.tick=K=>{U=typeof K==="function"?K:J};
+    N.tick=()=>U
   },
-  $I=()=>{
-    let B=A.EVENT_REGISTRY,
-    C=a.length;
-    while(_h<C){
-      let D=a[_h];
-      _G(D,B[D][0]);
-      Object.defineProperty(globalThis,D,{
+  $C=()=>{
+    let A=Q.length;
+    while(S<A){
+      let B=Q[S],
+      C=R[S];
+      if(C!==void 0){
+        api.setCallbackValueFallback(B,C)
+      }
+      Object.defineProperty(globalThis,B,{
         configurable:!0,
-        set:X[D],
-        get:Y[D]
+        set:M[B],
+        get:N[B]
       });
-      _h++
+      S++
     }
-    if(b){
+    if(T){
       Object.defineProperty(globalThis,"onPlayerJoin",{
         configurable:!0,
-        set:E=>{b=E instanceof Function?E:G},
-        get:()=>b
+        set:M.onPlayerJoin,
+        get:N.onPlayerJoin
       })
     }
     Object.defineProperty(globalThis,"tick",{
       configurable:!0,
-      set:F=>{c=F instanceof Function?F:G},
-      get:()=>c
+      set:M.tick,
+      get:N.tick
+    });
+    R=null
+  },
+  $D=()=>{
+    let A=Q.length;
+    while(V<A){
+      M[Q[V]](J);
+      V++
+    }
+    if(T){T=J}
+  };
+  let W,
+  X;
+  const $E=()=>{
+    B.tick();
+    X(50);
+    W()
+  },
+  $F=()=>{
+    Object.defineProperty(globalThis,"tick",{
+      configurable:!0,
+      set:A=>{X=typeof A==="function"?A:J},
+      get:()=>X
+    });
+    W=U;
+    U=$E
+  },
+  $G=()=>{
+    Object.defineProperty(globalThis,"tick",{
+      configurable:!0,
+      set:M.tick,
+      get:N.tick
+    });
+    U=X;
+    W=J
+  };
+  let Y,
+  Z,
+  a,
+  b=[],
+  c={},
+  d;
+  const $H=(A,B)=>{
+    let C=b.length;
+    b[C]=A;
+    b[C+1]=B;
+    c[A]=1
+  },
+  $I=()=>{
+    T=$H;
+    Object.defineProperty(globalThis,"onPlayerJoin",{
+      configurable:!0,
+      set:A=>{a=typeof A==="function"?A:J},
+      get:()=>a
     })
   },
   $J=()=>{
-    let A=a.length;
-    while(d<A){
-      X[a[d]](G);
-      d++
-    }
-    if(b){b=G}
-  },
-  $K=()=>{
-    $B();
-    f(50);
-    e()
-  },
-  $L=()=>{
-    let A=G;
-    Object.defineProperty(globalThis,"tick",{
-      configurable:!0,
-      set:B=>{f=A=B instanceof Function?B:G},
-      get:()=>A
-    });
-    e=c;
-    c=$K
-  },
-  $M=()=>{
-    Object.defineProperty(globalThis,"tick",{
-      configurable:!0,
-      set:A=>{c=A instanceof Function?A:G},
-      get:()=>c
-    });
-    c=f;
-    e=G
-  },
-  $N=(A,B)=>{
-    let C=i.length;
-    i[C]=A;
-    i[C+1]=B;
-    j[A]=1
-  },
-  $O=()=>{
-    b=$N;
-    let A=G;
-    Object.defineProperty(globalThis,"onPlayerJoin",{
-      configurable:!0,
-      set:B=>{h=A=B instanceof Function?B:G},
-      get:()=>A
-    })
-  },
-  $P=()=>{
-    if(_j||w){
-      let A=_H(),
+    if(Y||v){
+      let A=api.getPlayerIds(),
       B=0,
       C,D;
       while(C=A[B]){
-        if(!j[C]){
-          D=i.length;
-          i[D]=C;
-          i[D+1]=!1;
-          j[C]=1
+        if(!c[C]){
+          D=b.length;
+          b[D]=C;
+          b[D+1]=!1;
+          c[C]=1
         }
         B++
       }
     }
   },
-  $Q=()=>{
-    let A=g,
+  $K=()=>{
+    let A=Z,
     C,D;
-    while(k<i.length&&A>0){
-      C=i[k];
-      if(j[C]!==2){
-        D=i[k+1];
-        j[C]=2;
-        k+=2;
-        B.state=1;
-        B.fn=h;
+    while(d<b.length&&A>0){
+      C=b[d];
+      if(c[C]!==2){
+        D=b[d+1];
+        c[C]=2;
+        d+=2;
+        B.en=1;
+        B.fn=a;
         B.args=[C,D];
-        B.limit=2;
-        B.phase=1048576;
+        B.sid=0;
         try{
-          h(C,D)
-        }catch(error){
-          B.state=0;
-          $(_i+error.name+": "+error.message,0)
+          a(C,D)
+        }catch(E){
+          B.en=0;
+          $(L+" JM: "+E.name+": "+E.message,0)
         }
-        B.state=0;
-        k-=2;
+        B.en=0;
+        d-=2;
         A--
       }
-      k+=2
+      d+=2
     }
-    return k>=i.length
+    return d>=b.length
   },
-  $R=()=>{
-    b=h;
+  $L=()=>{
+    T=a;
     Object.defineProperty(globalThis,"onPlayerJoin",{
       configurable:!0,
-      set:A=>{b=A instanceof Function?A:G},
-      get:()=>b
+      set:M.onPlayerJoin,
+      get:N.onPlayerJoin
     });
-    i.length=0
-  },
-  $S=()=>{
-    let A=o,
-    B,C,E,F,G;
-    while(q<_n){
-      B=l[q];
-      if(!B||B.length<3){
-        D.pointer=++q;
+    b.length=0
+  };
+  let e=L+" BM: ",
+  $M,
+  f,
+  g=[null],
+  h,
+  i,
+  j,
+  k,
+  l,
+  m,
+  n,
+  o,
+  p,
+  q,
+  r,
+  s,
+  t;
+  const $N=()=>{
+    let A=i,
+    B,C,G,I,J;
+    while(l<m){
+      B=f[l];
+      if(!B?.length||B.length<3){
+        D.cursor=++l;
         continue
       }
-      C=B[0];
-      E=B[1];
-      F=B[2];
-      if((B[3]=_B(C,E,F))==="Unloaded"){return !1}
+      C=B[0]=F(B[0])|0;
+      G=B[1]=F(B[1])|0;
+      I=B[2]=F(B[2])|0;
+      if((B[3]=api.getBlock(C,G,I))==="Unloaded"){return !1}
       try{
-        G=_D(C,E,F)?.persisted?.shared?.text;
-        _A(G)
-      }catch(I){
-        m[++_m*+(m.length-1<p)]=[I.name,I.message,C,E,F]
+        J=H(C,G,I)?.persisted?.shared?.text;
+        E(J)
+      }catch(K){
+        g[++k*+(g.length-1<j)]=[K.name,K.message,C,G,I]
       }
-      D.pointer=++q;
+      D.cursor=++l;
       A--;
       if(A<=0){return !1}
     }
     return !0
   },
-  $T=()=>{
-    if(!r){
-      let A=l[0];
-      if(!A||A.length<3){return !0}
-      if(E(A[0],A[1],A[2])===1){return !1}
-      v=_E(A);
-      if(!v[0]?.attributes?.customAttributes?.region){return !0}
-      r=!0
+  $O=()=>{
+    if(!n){
+      let A=f[0];
+      if(!A?.length||A.length<3){return !0}
+      let B=A[0]=F(A[0])|0,
+      C=A[1]=F(A[1])|0,
+      D=A[2]=F(A[2])|0;
+      if(G(B,C,D)===1){return !1}
+      p=I([B,C,D]);
+      if(!p[0]?.attributes?.customAttributes?.region){return !0}
+      n=!0
     }
-    let B=o,
-    C,F,G,H,I,J,K,L,M,N,O;
-    while(C=v[_o]){
-      F=C.attributes.customAttributes._;
-      G=F.length-2;
-      while(t<G){
-        H=F[t];
-        I=F[t+1];
-        J=F[t+2];
-        K=(H>>5)+"|"+(I>>5)+"|"+(J>>5);
-        if(!s[K]){
-          if(E(H,I,J)===1){return !1}
-          s[K]=!0
+    let A=i,
+    B,C,F,H,J,K,L,M,N,O,P;
+    while(B=p[r]){
+      C=B.attributes.customAttributes._;
+      F=C.length-2;
+      while(s<F){
+        H=C[s];
+        J=C[s+1];
+        K=C[s+2];
+        L=(H>>5)+"|"+(J>>5)+"|"+(K>>5);
+        if(!o[L]){
+          if(G(H,J,K)===1){return !1}
+          o[L]=!0
         }
-        if(u===0){
-          _p=_E([H,I,J])
+        if(t===0){
+          q=I([H,J,K])
         }
-        while(u<4){
-          L="";M=u*9;
-          N=0;
-          while(N<9&&(O=_p[M+N])){
-            L+=O.attributes.customAttributes._;
-            N++
+        while(t<4){
+          M="";N=t*9;
+          O=0;
+          while(O<9&&(P=q[N+O])){
+            M+=P.attributes.customAttributes._;
+            O++
           }
-          if(N===0){
-            D.pointer++;
+          if(O===0){
+            D.cursor++;
             break
           }
           try{
-            _A(L)
-          }catch(P){
-            m[++_m*+(m.length-1<p)]=[P.name,P.message,H,I,J,u]
+            E(M)
+          }catch(Q){
+            g[++k*+(g.length-1<j)]=[Q.name,Q.message,H,J,K,t]
           }
-          u++;
-          D.pointer++;
-          B--;
-          if(B<=0){return !1}
+          t++;
+          D.cursor++;
+          A--;
+          if(A<=0){
+            return !1
+          }
         }
-        u=0;
-        t+=3
+        t=0;
+        s+=3
       }
-      t=0;
-      _o++
+      s=0;
+      r++
     }
     return !0
   },
-  $U=()=>{
-    _l=n?$T:$S
+  $P=()=>{
+    $M=h?$O:$N
   },
-  $V=()=>{
-    m[0]=null;
-    s=null;
-    v=null;
-    _p=null
-  },
-  $W=A=>{
-    let B="Code was loaded in "+_u*50+" ms",
-    C=m.length-1;
+  $Q=()=>{
+    g[0]=null;
+    o=null;
+    p=null;
+    q=null
+  };
+  let _C=L+" OM: ",
+  u=-2,
+  v=!0,
+  w=-1,
+  x=!1,
+  y,
+  _D,
+  _E,
+  _F,
+  z;
+  const $R=A=>{
+    let B="Code was loaded in "+z*50+" ms",
+    C=g.length-1;
     if(A){
       B+=C>0?" with "+C+" error"+(C===1?"":"s")+".":" with 0 errors."
     }else{
       B+="."
     }
-    $(_q+B,1+(C<=0))
+    $(_C+B,1+(C<=0))
   },
-  $X=A=>{
-    let B=m.length-1;
+  $S=A=>{
+    let B=g.length-1;
     if(B>0){
       let C="Code execution error"+(B===1?"":"s")+":",
       D;
-      if(n){
+      if(h){
         for(let E=1;E<=B;E++){
-          D=m[E];
+          D=g[E];
           C+="\n"+D[0]+" at ("+D[2]+", "+D[3]+", "+D[4]+") in partition ("+D[5]+"): "+D[1]
         }
       }else{
-        for(let F=1;F<=B;F++){
-          D=m[F];C+="\n"+D[0]+" at ("+D[2]+", "+D[3]+", "+D[4]+"): "+D[1]
+        for(let E=1;E<=B;E++){
+          D=g[E];
+          C+="\n"+D[0]+" at ("+D[2]+", "+D[3]+", "+D[4]+"): "+D[1]
         }
       }
-      $(_k+C,0)
+      $(e+C,0)
     }else if(A){
-      $(_k+"No code execution errors.",2)
+      $(e+"No code execution errors.",2)
     }
   },
-  $Y=()=>{
+  $T=()=>{
     let A="",
     B;
-    if(n){
-      if(r){
-        B=l[0];
+    if(h){
+      if(n){
+        B=f[0];
         A="Executed storage data at ("+B[0]+", "+B[1]+", "+B[2]+")."
       }else{
         A="No storage data found."
       }
     }else{
       let C=0,
-      D=l.length;
+      D=f.length;
       for(let E=0;E<D;E++){
-        B=l[E];
-        if(B[3]){
+        B=f[E];
+        if(B?.[3]){
           A+='\n"'+B[3]+'" at ('+B[0]+", "+B[1]+", "+B[2]+")";
           C++
         }
       }
       A="Executed "+C+" block"+(C===1?"":"s")+" data"+(C===0?".":":")+A
     }
-    $(_k+A,3)
+    $(e+A,3)
   },
-  $Z=(A,B,C)=>{
-    if(Z.length){
-      $(_e+'Unknown active events: "'+Z.join('", "')+'".',1)
-    }
+  $U=(A,B,C)=>{
     if(A){
-      $W(B)
+      $R(B)
     }
     if(B){
-      $X(!A)
+      $S(!A)
     }
     if(C){
-      $Y()
+      $T()
     }
   },
-  $a=()=>{
-    x++;
-    if(_<3){
-      if(_===-2){
-        if(!_f&&x>20){
-          let A=_e+"Error on primary setup - "+_g?.[0]+": "+_g?.[1]+".",
-          B=_H(),
+  $V=()=>{
+    w++;
+    if(u<3){
+      if(u===-2){
+        if(!O&&w>20){
+          let A=L+" EM: Error on primary setup - "+P?.[0]+": "+P?.[1]+".",
+          B=api.getPlayerIds(),
           C=0,
-          E;
-          while(E=B[C]){
-            if(api.checkValid(E)){
-              api.kickPlayer(E,A)
+          D;
+          while(D=B[C]){
+            if(api.checkValid(D)){
+              api.kickPlayer(D,A)
             }
             C++
           }
         }
         return
       }
-      if(_===0){
+      if(u===0){
         $A();
-        _=1
+        u=1
       }
-      if(_===1){
-        if(x<z){return}
-        _=2
+      if(u===1){
+        if(w<y){return}
+        u=2
       }
-      if(_===2){
-        if(w){
-          $I()
+      if(u===2){
+        if(v){
+          $C()
         }else{
+          $D()
+        }
+        if(T){
+          $I();
           $J()
         }
-        if(b){
-          $O();
-          $P()
-        }
-        $U();
-        $L();
-        _=3
+        $P();
+        $F();
+        u=3
       }
     }
-    if(_===3&&_l()){
-      $V();
-      _=4+!b
+    if(u===3&&$M()){
+      $Q();
+      u=4+!T
     }
-    if(_===4&&$Q()){
-      $R();
-      _=5
+    if(u===4&&$K()){
+      $L();
+      u=5
     }
-    if(_===5){
-      $M();
-      D.isPrimaryBoot=w=!1;
-      D.isRunning=y=!1;
-      _=-1;
-      _u=x-z+1;
-      $Z(_r,_s,_t)
+    if(u===5){
+      $G();
+      D.isPrimaryBoot=v=!1;
+      D.isRunning=x=!1;
+      u=-1;
+      z=w-y+1;
+      $U(_D,_E,_F)
     }
-  };
-  B.tick = $B;
-  Object.defineProperty(globalThis.InternalError.prototype,"name",{
-    configurable:!0,
-    get:()=>{
-      if(_M){
-        if(B.state){
-          _K[_N++]=[B.fn,B.args,B.limit,B.phase,B.cache];
-          _P++
-        }
-      }else{
-        I[3]=B.phase;
-        B.wasInterrupted=!1;
-        _M=1
-      }
-      B.state=0;
-      return"InternalError"
-    }
-  });
-  C.create=(A,B)=>{
-    K[K.length]=()=>$C(A,B)
-  };
-  C.check=A=>{
-    K[K.length]=()=>$D(A)
-  };
-  C.build=(A,B,C=8)=>{
-    K[K.length]=()=>$E(A,B,C)
-  };
-  C.dispose=(A,B=32)=>{
-    K[K.length]=()=>$F(A,B)
   };
   D.SM=C;
   D.config=A;
   D.reboot=()=>{
-    if(!y){
-      x=0;
-      D.isRunning=y=!0;
-      D.pointer=0;
-      c=$a;
-      _=0
+    if(!x){
+      w=0;
+      D.isRunning=x=!0;
+      D.cursor=0;
+      U=$V;
+      u=0
     }else{
-      $(_q+"Reboot request was denied.",1)
+      $(_C+"Reboot request was denied.",1)
     }
   };
-  D.bootLogs=(A=!0)=>{
-    $W(A)
+  D.logBootStatus=(A=!0)=>{
+    $R(A)
   };
-  D.errorLogs=(A=!0)=>{
-    $X(A)
+  D.logErrors=(A=!0)=>{
+    $S(A)
   };
-  D.executionLogs=()=>{
-    $Y()
+  D.logExecutionInfo=()=>{
+    $T()
   };
-  D.completeLogs=(A=!0,B=!0,C=!1)=>{
-    $Z(A,B,C)
+  D.logReport=(A=!0,B=!0,C=!1)=>{
+    $U(A,B,C)
   };
-  c=$a;
-  X.tick=A=>{c=A instanceof Function?A:G};
-  Y.tick=()=>c;
+  U=$V;
   globalThis.tick=function(){
-    c(50);
-    if(K.length){$G()}
+    U(50);
+    if(_A.length){_B()}
   };
   try{
-    x=0;
-    D.isRunning=y=!0;
-    D.pointer=0;
-    $H();
+    w=0;
+    D.isRunning=x=!0;
+    D.cursor=0;
+    $B();
     let E=A.STYLES;
     for(let F=0;F<4;F++){
-      _J[F]=[{
+      K[F]=[{
         str:"",
         style:{
           color:E[F*3],
@@ -1055,79 +999,20 @@ const configuration={
     let G=Object.seal,
     H=Object.freeze;
     G(A);
-    G(A.boot_manager);
-    G(A.block_manager);
-    G(A.join_manager);
-    G(A.event_manager);
-    H(A.EVENT_REGISTRY);
+    G(A.OM);
+    G(A.BM);
+    G(A.JM);
     H(A.STYLES);
     G(B);
     H(C);
     G(D);
-    _f=!0;
-    _=0
-  }catch(I){
-    _g=[I.name,I.message]
+    O=!0;
+    u=0
+  }catch(_){
+    P=[_.name,_.message]
   }
   globalThis.IF=B;
   globalThis.CL=D;
   void 0
 }
-
-/*
-_CF
-_IF
-_SM
-_CL
-_getBlockId
-_setStandardChestItemSlot
-_NOOP
-_PREFIX
-_IF_element
-_SM_prefix
-_SM_taskQueue
-_SM_taskIndex
-_SM_taskPhase
-_SM_itemType
-_SM_storageCoordsBuffer
-_SM_dataChunksBuffer
-_SM_isChunkLoaded
-_SM_registryItems
-_SM_blockIndex
-_SM_registrySlotIndex
-_SM_coordsList
-_SM_coordsIndex
-_SM_coordsCount
-_EM_setEventHandler
-_EM_getEventHandler
-_EM_unknownActiveEvents
-_EM_activeEvents
-_EM_join_handler
-_EM_tick_handler
-_EM_resetCursor
-_TM_boot
-_TM_main
-_JM_maxDequeuePerTick
-_JM_main
-_JM_buffer
-_JM_state
-_JM_dequeueCursor
-_BM_blocks
-_BM_errors
-_BM_isChestMode
-_BM_maxExecutionsPerTick
-_BM_maxErrorsCount
-_BM_blockIndex
-_BM_isRegistryLoaded
-_BM_isChunkLoaded
-_BM_coordsIndex
-_BM_partition
-_BM_registryItems
-_OM_phase
-_OM_isPrimaryBoot
-_OM_tickNum
-_OM_isRunning
-_OM_bootDelayTicks
-_log
-*/
 

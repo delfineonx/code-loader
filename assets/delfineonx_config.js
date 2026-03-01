@@ -1,10 +1,10 @@
-// Code Loader v2026-02-24-0001
-// Interruption Framework v2026-02-24-0001
+// Code Loader v2026-02-29-0001
+// Interruption Framework v2026-02-29-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
 
-const configuration={
-ACTIVE_EVENTS:[
+const configuration = {
+EVENTS: [
 "tick",
 "onPlayerJoin",
 "onPlayerLeave",
@@ -12,13 +12,19 @@ ACTIVE_EVENTS:[
 "onPlayerChat",
 "onPlayerJump",
 "onPlayerClick",
+/*
+"tick",
+["onPlayerJoin", 1],
+["onPlayerLeave", 1],
+"playerCommand",
+["onPlayerChat", 0, null],
+["onPlayerJump", 1],
+"onPlayerClick",
+*/
 ],
-BLOCKS:[
-
+BLOCKS: [
 // [6, 25, 6],
-
 // [27, 4, 25],
-
 [27, 4, 23],
 [27, 4, 21],
 [27, 4, 19],
@@ -28,97 +34,26 @@ BLOCKS:[
 [27, 4, 10],
 [27, 4, 8],
 [27, 4, 6],
-
 ],
-boot_manager:{
+OM: {
 boot_delay_ms: 100,
-show_boot_logs: true,
-show_error_logs: true,
-show_execution_logs: false,
+show_boot_status: true,
+show_errors: true,
+show_execution_info: false,
 },
-block_manager:{
+BM: {
 is_chest_mode: false, //
-max_executions_per_tick: 8, //
-max_errors_count: 32,
+execution_budget_per_tick: 8, //
+max_error_count: 32,
 },
-join_manager:{
+JM: {
 reset_on_reboot: true,
-max_dequeue_per_tick: 16,
+dequeue_budget_per_tick: 8,
 },
-event_manager:{
-is_framework_enabled: false, //
-default_retry_limit: 2,
-},
-EVENT_REGISTRY:{
-tick: null,
-onClose: [],
-onPlayerJoin: [/* null, true */], //
-onPlayerLeave: [/* null, true */], //
-onPlayerJump: [/* undefined, true, 5 */], //
-onRespawnRequest: [[0,-10000,0]],
-playerCommand: [undefined],
-onPlayerChat: [null /*, true */], //
-onPlayerChangeBlock: ["preventChange"],
-onPlayerDropItem: ["preventDrop"],
-onPlayerPickedUpItem: [],
-onPlayerSelectInventorySlot: [],
-onBlockStand: [],
-onPlayerAttemptCraft: ["preventCraft"],
-onPlayerCraft: [],
-onPlayerAttemptOpenChest: ["preventOpen"],
-onPlayerOpenedChest: [],
-onPlayerMoveItemOutOfInventory: ["preventChange"],
-onPlayerMoveInvenItem: ["preventChange"],
-onPlayerMoveItemIntoIdxs: ["preventChange"],
-onPlayerSwapInvenSlots: ["preventChange"],
-onPlayerMoveInvenItemWithAmt: ["preventChange"],
-onPlayerAttemptAltAction: ["preventAction"],
-onPlayerAltAction: [],
-onPlayerClick: [],
-onClientOptionUpdated: [],
-onMobSettingUpdated: [],
-onInventoryUpdated: [],
-onChestUpdated: [],
-onWorldChangeBlock: ["preventChange"],
-onCreateBloxdMeshEntity: [],
-onEntityCollision: [],
-onPlayerAttemptSpawnMob: ["preventSpawn"],
-onWorldAttemptSpawnMob: ["preventSpawn"],
-onPlayerSpawnMob: [],
-onWorldSpawnMob: [],
-onWorldAttemptDespawnMob: ["preventDespawn"],
-onMobDespawned: [],
-onPlayerAttack: [],
-onPlayerDamagingOtherPlayer: ["preventDamage"],
-onPlayerDamagingMob: ["preventDamage"],
-onMobDamagingPlayer: ["preventDamage"],
-onMobDamagingOtherMob: ["preventDamage"],
-onAttemptKillPlayer: ["preventDeath"],
-onPlayerKilledOtherPlayer: ["keepInventory"],
-onMobKilledPlayer: ["keepInventory"],
-onPlayerKilledMob: ["preventDrop"],
-onMobKilledOtherMob: ["preventDrop"],
-onPlayerPotionEffect: [],
-onPlayerDamagingMeshEntity: [],
-onPlayerBreakMeshEntity: [],
-onPlayerUsedThrowable: [],
-onPlayerThrowableHitTerrain: [],
-onTouchscreenActionButton: [],
-onTaskClaimed: [],
-onChunkLoaded: [],
-onPlayerRequestChunk: [],
-onItemDropCreated: [],
-onPlayerStartChargingItem: [],
-onPlayerFinishChargingItem: [],
-onPlayerFinishQTE: [],
-onPlayerBoughtShopItem: [],
-doPeriodicSave: [],
-},
-STYLES:[
-"#FF775E","500","0.95rem",
-"#FFC23D","500","0.95rem",
-"#20DD69","500","0.95rem",
-"#52B2FF","500","0.95rem"
-]
+STYLES: [
+"#FF775E", "500", "0.95rem",
+"#FFC23D", "500", "0.95rem",
+"#20DD69", "500", "0.95rem",
+"#52B2FF", "500", "0.95rem",
+],
 };
-

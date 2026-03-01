@@ -1,602 +1,557 @@
-// Code Loader v2026-02-24-0001
-// Interruption Framework v2026-02-24-0001
+// Code Loader v2026-02-29-0001
+// Interruption Framework v2026-02-29-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
 
-const configuration={
-  ACTIVE_EVENTS:[
+const configuration = {
+  EVENTS: [
     /* ... */
   ],
-  BLOCKS:[
+  BLOCKS: [
     /* ... */
   ],
-  boot_manager:{
+  OM: {
     boot_delay_ms: 100,
-    show_boot_logs: true,
-    show_error_logs: true,
-    show_execution_logs: false,
+    show_boot_status: true,
+    show_errors: true,
+    show_execution_info: false,
   },
-  block_manager:{
+  BM: {
     is_chest_mode: false,
-    max_executions_per_tick: 8,
-    max_errors_count: 32,
+    execution_budget_per_tick: 8,
+    max_error_count: 32,
   },
-  join_manager:{
+  JM: {
     reset_on_reboot: true,
-    max_dequeue_per_tick: 16,
+    dequeue_budget_per_tick: 8,
   },
-  event_manager:{
-    is_framework_enabled: false,
-    default_retry_limit: 2,
-  },
-  EVENT_REGISTRY:{
-    tick: null,
-    onClose: [],
-    onPlayerJoin: [],
-    onPlayerLeave: [],
-    onPlayerJump: [],
-    onRespawnRequest: [[0,-10000,0]],
-    playerCommand: [undefined],
-    onPlayerChat: [null],
-    onPlayerChangeBlock: ["preventChange"],
-    onPlayerDropItem: ["preventDrop"],
-    onPlayerPickedUpItem: [],
-    onPlayerSelectInventorySlot: [],
-    onBlockStand: [],
-    onPlayerAttemptCraft: ["preventCraft"],
-    onPlayerCraft: [],
-    onPlayerAttemptOpenChest: ["preventOpen"],
-    onPlayerOpenedChest: [],
-    onPlayerMoveItemOutOfInventory: ["preventChange"],
-    onPlayerMoveInvenItem: ["preventChange"],
-    onPlayerMoveItemIntoIdxs: ["preventChange"],
-    onPlayerSwapInvenSlots: ["preventChange"],
-    onPlayerMoveInvenItemWithAmt: ["preventChange"],
-    onPlayerAttemptAltAction: ["preventAction"],
-    onPlayerAltAction: [],
-    onPlayerClick: [],
-    onClientOptionUpdated: [],
-    onMobSettingUpdated: [],
-    onInventoryUpdated: [],
-    onChestUpdated: [],
-    onWorldChangeBlock: ["preventChange"],
-    onCreateBloxdMeshEntity: [],
-    onEntityCollision: [],
-    onPlayerAttemptSpawnMob: ["preventSpawn"],
-    onWorldAttemptSpawnMob: ["preventSpawn"],
-    onPlayerSpawnMob: [],
-    onWorldSpawnMob: [],
-    onWorldAttemptDespawnMob: ["preventDespawn"],
-    onMobDespawned: [],
-    onPlayerAttack: [],
-    onPlayerDamagingOtherPlayer: ["preventDamage"],
-    onPlayerDamagingMob: ["preventDamage"],
-    onMobDamagingPlayer: ["preventDamage"],
-    onMobDamagingOtherMob: ["preventDamage"],
-    onAttemptKillPlayer: ["preventDeath"],
-    onPlayerKilledOtherPlayer: ["keepInventory"],
-    onMobKilledPlayer: ["keepInventory"],
-    onPlayerKilledMob: ["preventDrop"],
-    onMobKilledOtherMob: ["preventDrop"],
-    onPlayerPotionEffect: [],
-    onPlayerDamagingMeshEntity: [],
-    onPlayerBreakMeshEntity: [],
-    onPlayerUsedThrowable: [],
-    onPlayerThrowableHitTerrain: [],
-    onTouchscreenActionButton: [],
-    onTaskClaimed: [],
-    onChunkLoaded: [],
-    onPlayerRequestChunk: [],
-    onItemDropCreated: [],
-    onPlayerStartChargingItem: [],
-    onPlayerFinishChargingItem: [],
-    onPlayerFinishQTE: [],
-    onPlayerBoughtShopItem: [],
-    doPeriodicSave: [],
-  },
-  STYLES:[
-    "#FF775E","500","0.95rem",
-    "#FFC23D","500","0.95rem",
-    "#20DD69","500","0.95rem",
-    "#52B2FF","500","0.95rem"
-  ]
+  STYLES: [
+    "#FF775E", "500", "0.95rem",
+    "#FFC23D", "500", "0.95rem",
+    "#20DD69", "500", "0.95rem",
+    "#52B2FF", "500", "0.95rem",
+  ],
 };
 
-
 {
-  let _CF=configuration,
-  _IF={
-    state:0,
-    fn:()=>{},
-    args:[],
-    limit:2,
-    phase:1048576,
-    cache:null,
-    default:1048576,
-    wasInterrupted:!1,
+  const _CF_=configuration,
+  _IF_={
+    en:0,
+    fn:null,
+    args:null,
+    rcnt:0,
+    sid:0,
+    noArgs:null,
     tick:null
   },
-  _SM={
+  _SM_={
     create:null,
     check:null,
     build:null,
     dispose:null
   },
-  _CL={
+  _CL_={
     SM:null,
     config:null,
     isPrimaryBoot:!0,
     isRunning:!1,
-    pointer:0,
+    cursor:0,
     reboot:null,
-    bootLogs:null,
-    errorLogs:null,
-    executionLogs:null,
-    completeLogs:null
+    logBootStatus:null,
+    logErrors:null,
+    logExecutionInfo:null,
+    logReport:null
   },
   _eval=eval,
-  _getBlock=api.getBlock,
+  _floor=Math.floor,
   _getBlockId=api.getBlockId,
-  _setBlock=api.setBlock,
   _getBlockData=api.getBlockData,
   _getStandardChestItems=api.getStandardChestItems,
-  _getStandardChestItemSlot=api.getStandardChestItemSlot,
-  _setStandardChestItemSlot=api.setStandardChestItemSlot,
-  _setCallbackValueFallback=api.setCallbackValueFallback,
-  _getPlayerIds=api.getPlayerIds,
-  _broadcastMessage=api.broadcastMessage,
-  _NOOP=function(){},
-  _STYLES=[],
-  _PREFIX="Code Loader",
-  _IF_interrupted=Object.create(null),
-  _IF_emptyArgs=[],
-  _IF_element=[],
-  _IF_external=1,
-  _IF_enqueueId=1,
-  _IF_dequeueId=1,
-  _IF_queueSize=0,
-  _SM_prefix=_PREFIX+" SM: ",
-  _SM_taskQueue=[],
-  _SM_taskIndex=0,
-  _SM_taskPhase=1,
-  _SM_blockType="Bedrock",
-  _SM_itemType="Boat",
-  _SM_storageItemData={customAttributes:{_:null}},
-  _SM_registryItemData={customAttributes:{_:[]}},
-  _SM_storageCoordsBuffer=_SM_registryItemData.customAttributes._,
-  _SM_dataChunksBuffer=[],
-  _SM_lowX,
-  _SM_lowY,
-  _SM_lowZ,
-  _SM_highX,
-  _SM_highY,
-  _SM_highZ,
-  _SM_storageX,
-  _SM_storageY,
-  _SM_storageZ,
-  _SM_isChunkLoaded,
-  _SM_registryItems,
-  _SM_storagePosition,
-  _SM_blockIndex,
-  _SM_partition,
-  _SM_registrySlotIndex,
-  _SM_coordsList,
-  _SM_coordsIndex,
-  _SM_coordsCount,
-  _EM_prefix=_PREFIX+" EM: ",
-  _EM_setEventHandler=Object.create(null),
-  _EM_getEventHandler=Object.create(null),
-  _EM_isSetupDone=!1,
-  _EM_setupError=null,
-  _EM_unknownActiveEvents=[],
-  _EM_activeEvents=[],
-  _EM_installCursor=0,
-  _EM_join_handler,
-  _EM_tick_handler,
-  _EM_resetCursor,
-  _TM_boot,
-  _TM_main,
-  _JM_prefix=_PREFIX+" JM: ",
-  _JM_resetOnReboot,
-  _JM_maxDequeuePerTick,
-  _JM_main,
-  _JM_buffer=[],
-  _JM_state={},
-  _JM_dequeueCursor,
-  _BM_prefix=_PREFIX+" BM: ",
-  _BM_executor,
-  _BM_blocks,
-  _BM_errors=[null],
-  _BM_isChestMode,
-  _BM_maxExecutionsPerTick,
-  _BM_maxErrorsCount,
-  _BM_errorIndex,
-  _BM_blockIndex,
-  _BM_blocksCount,
-  _BM_isRegistryLoaded,
-  _BM_isChunkLoaded,
-  _BM_registrySlotIndex,
-  _BM_coordsIndex,
-  _BM_partition,
-  _BM_registryItems,
-  _BM_storageItems,
-  _OM_prefix=_PREFIX+" OM: ",
-  _OM_phase=-2,
-  _OM_isPrimaryBoot=!0,
-  _OM_tickNum=-1,
-  _OM_isRunning=!1,
-  _OM_bootDelayTicks,
-  _OM_showBootLogs,
-  _OM_showErrorLogs,
-  _OM_showExecutionLogs,
-  _OM_loadTimeTicks;
-
+  _NO_OP=Object.freeze(function(){}),
+  _LOG_STYLES=[],
+  _LOG_PREFIX="Code Loader";
   const _log=(message,type)=>{
-    let styledText=_STYLES[type];
+    let styledText=_LOG_STYLES[type];
     styledText[0].str=message;
-    _broadcastMessage(styledText);
+    api.broadcastMessage(styledText);
     styledText[0].str=""
   },
   _establish=()=>{
-    let JM_config=_CF.join_manager,
-    BM_config=_CF.block_manager,
-    OM_config=_CF.boot_manager;
+    let JM_config=_CF_.JM,
+    BM_config=_CF_.BM,
+    OM_config=_CF_.OM;
     _EM_resetCursor=0;
-    _TM_boot=_NOOP;
-    _TM_main=_NOOP;
+    _TM_boot=_NO_OP;
+    _TM_main=_NO_OP;
     if(_EM_join_handler){
       _JM_resetOnReboot=!!JM_config.reset_on_reboot;
-      _JM_maxDequeuePerTick=JM_config.max_dequeue_per_tick|0;
-      _JM_maxDequeuePerTick=(_JM_maxDequeuePerTick&~(_JM_maxDequeuePerTick>>31))+(-_JM_maxDequeuePerTick>>31)+1;
-      _JM_main=_NOOP;
+      _JM_dequeueBudgetPerTick=JM_config.dequeue_budget_per_tick|0;
+      _JM_dequeueBudgetPerTick=(_JM_dequeueBudgetPerTick&~(_JM_dequeueBudgetPerTick>>31))+(-_JM_dequeueBudgetPerTick>>31)+1;
+      _JM_main=_NO_OP;
       if(!_OM_isPrimaryBoot){
-        _JM_buffer.length=0;
-        if(_JM_resetOnReboot){_JM_state={}}
+        _JM_queue.length=0;
+        if(_JM_resetOnReboot){
+          _JM_playerStatus={}
+        }
       }
-      _JM_dequeueCursor=0
+      _JM_queueCursor=0
     }
-    _BM_blocks=_CF.BLOCKS instanceof Array?_CF.BLOCKS:[];
+    _BM_blockList=_CF_.BLOCKS instanceof Array?_CF_.BLOCKS:[];
     _BM_isChestMode=!!BM_config.is_chest_mode;
-    _BM_maxExecutionsPerTick=BM_config.max_executions_per_tick|0;
-    _BM_maxExecutionsPerTick=(_BM_maxExecutionsPerTick&~(_BM_maxExecutionsPerTick>>31))+(-_BM_maxExecutionsPerTick>>31)+1;
-    _BM_maxErrorsCount=BM_config.max_errors_count|0;
-    _BM_maxErrorsCount=_BM_maxErrorsCount&~(_BM_maxErrorsCount>>31);
-    _BM_errors.length=1;
-    _BM_errors[0]=null;
+    _BM_executionBudgetPerTick=BM_config.execution_budget_per_tick|0;
+    _BM_executionBudgetPerTick=(_BM_executionBudgetPerTick&~(_BM_executionBudgetPerTick>>31))+(-_BM_executionBudgetPerTick>>31)+1;
+    _BM_errorLimit=BM_config.max_error_count|0;
+    _BM_errorLimit=_BM_errorLimit&~(_BM_errorLimit>>31);
+    _BM_errorList.length=1;
+    _BM_errorList[0]=null;
     _BM_errorIndex=0;
-    _BM_blockIndex=0;
-    _BM_blocksCount=_BM_blocks.length;
+    _BM_blockCursor=0;
+    _BM_blockCount=_BM_blockList.length;
     if(_BM_isChestMode){
       _BM_isRegistryLoaded=!1;
-      _BM_isChunkLoaded={};
+      _BM_loadedChunks={};
       _BM_registrySlotIndex=1;
-      _BM_coordsIndex=0;
+      _BM_coordIndex=0;
       _BM_partition=0
     }
     _OM_bootDelayTicks=(OM_config.boot_delay_ms|0)*.02|0;
     _OM_bootDelayTicks=_OM_bootDelayTicks&~(_OM_bootDelayTicks>>31);
-    _OM_showBootLogs=!!OM_config.show_boot_logs;
-    _OM_showErrorLogs=!!OM_config.show_error_logs;
-    _OM_showExecutionLogs=!!OM_config.show_execution_logs;
-    _OM_loadTimeTicks=-1
-  },
-  _IF_tick=()=>{
-    _IF.state=0;
-    if(!_IF_queueSize){
-      _IF.args=_IF_emptyArgs;
-      _IF.cache=null;
-      return
-    }
-    _IF_external=0;
-    _IF.wasInterrupted=!0;
-    while(_IF_dequeueId<_IF_enqueueId){
-      _IF_element=_IF_interrupted[_IF_dequeueId];
-      if(_IF_element[2]>0){
-        _IF_element[2]--;
-        _IF.phase=_IF_element[3];
-        _IF.cache=_IF_element[4];
-        _IF_element[0](..._IF_element[1])
+    _OM_showBootStatus=!!OM_config.show_boot_status;
+    _OM_showErrors=!!OM_config.show_errors;
+    _OM_showExecutionInfo=!!OM_config.show_execution_info;
+    _OM_loadDurationTicks=-1
+  };
+  {
+    const _IF=_IF_,
+    _NO_OP=_IF.fn=Object.freeze(()=>{}),
+    _NO_ARGS=_IF.args=_IF.noArgs=Object.freeze([]),
+    _NO_TASK=[null,_NO_ARGS,null,0],
+    _queue=[];
+    let _task=_NO_TASK,
+    _external=1,
+    _headIndex=0,
+    _tailIndex=0,
+    _queueSize=0;
+    _IF.tick=()=>{
+      _IF.fn=_NO_OP;
+      _IF.args=_NO_ARGS;
+      if(!_queueSize){return}
+      _external=0;
+      let _error=null;
+      while(_queueSize){
+        _task=_queue[_headIndex];
+        _IF.args=_task[1];
+        _IF.rcnt=++_task[2];
+        _IF.sid=_task[3];
+        try{
+          _task[0](..._IF.args)
+        }catch(error){
+          _error=error
+        }
+        _queue[_headIndex]=void 0;
+        _headIndex++;
+        _queueSize--;
+        if(_error){
+          _log("Interruption Framework ["+(_task[0]?.name||"<anonymous>")+"]: "+_error.name+": "+_error.message,0);
+          _error=null
+        }
       }
-      delete _IF_interrupted[_IF_dequeueId++];
-      _IF_queueSize--
-    }
-    _IF.state=0;
-    _IF.args=_IF_emptyArgs;
-    _IF.cache=null;
-    _IF.wasInterrupted=!1;
-    _IF_external=1
-  },
-  _SM_create=(lowPosition,highPosition)=>{
-    let lowX=lowPosition[0],
-    lowY=lowPosition[1],
-    lowZ=lowPosition[2],
-    highX=highPosition[0],
-    highY=highPosition[1],
-    highZ=highPosition[2];
-    if(lowX>highX||lowY>highY||lowZ>highZ){
-      _log(_SM_prefix+"Invalid region bounds. lowPos must be <= highPos on all axes.",1);
-      return !0
-    }
-    if(_getBlockId(lowX,lowY,lowZ)===1){return !1}
-    _setBlock(lowX,lowY,lowZ,_SM_blockType);
-    _setStandardChestItemSlot([lowX,lowY,lowZ],0,_SM_itemType,null,void 0,{
-      customAttributes:{
-        region:[lowX,lowY,lowZ,highX,highY,highZ]
+      _headIndex=0;
+      _tailIndex=0;
+      _queue.length=0;
+      _task=_NO_TASK;
+      _IF.en=0;
+      _IF.fn=_NO_OP;
+      _IF.args=_NO_ARGS;
+      _IF.rcnt=0;
+      _external=1
+    };
+    Object.defineProperty(globalThis.InternalError.prototype,"name",{
+      configurable:!0,
+      get:()=>{
+        if(_external){
+          if(_IF.en){
+            _IF.en=0;
+            _queue[_tailIndex]=[_IF.fn,_IF.args,0,_IF.sid];
+            _tailIndex++;
+            _queueSize++
+          }
+        }else{
+          _IF.en=0;
+          _IF.rcnt=0;
+          _task[1]=_IF.args;
+          _task[3]=_IF.sid;
+          _task=_NO_TASK;
+          _IF.args=_NO_ARGS;
+          _external=1
+        }
+        return"InternalError"
       }
-    });
-    _log(_SM_prefix+"Registry unit created at ("+lowX+", "+lowY+", "+lowZ+").",2);
-    return !0
-  },
-  _SM_check=registryPosition=>{
-    if(_getBlockId(registryPosition[0],registryPosition[1],registryPosition[2])===1){return !1}
-    let region=_getStandardChestItemSlot(registryPosition,0)?.attributes?.customAttributes?.region;
-    if(!region){
-      _log(_SM_prefix+"No valid registry unit found.",1)
-    }else{
-      _log(_SM_prefix+"Storage covers region from ("+region[0]+", "+region[1]+", "+region[2]+") to ("+region[3]+", "+region[4]+", "+region[5]+").",3)
-    }
-    return !0
-  },
-  _SM_build=(registryPosition,blocks,maxStorageUnitsPerTick)=>{
-    if(_SM_taskPhase===1){
-      if(_getBlockId(registryPosition[0],registryPosition[1],registryPosition[2])===1){return !1}
-      let region=_getStandardChestItemSlot(registryPosition,0)?.attributes?.customAttributes?.region;
+    })
+  }
+  let _SM_queue,
+  _SM_tick;
+  {
+    let _setBlock=api.setBlock,
+    _getStandardChestItemSlot=api.getStandardChestItemSlot,
+    _setStandardChestItemSlot=api.setStandardChestItemSlot,
+    _prefix=_LOG_PREFIX+" SM: ",
+    _queue=_SM_queue=[],
+    _queueCursor=0,
+    _taskState=1,
+    _blockType="Bedrock",
+    _itemType="Boat",
+    _storageSlotData={customAttributes:{_:null}},
+    _registrySlotData={customAttributes:{_:[]}},
+    _coordWriteBuffer=_registrySlotData.customAttributes._,
+    _textSegmentsBuffer=[],
+    _loadedChunks,
+    _registryChestPos,
+    _storageChestPos,
+    _registryItems,
+    _registrySlotIndex,
+    _lowX,
+    _lowY,
+    _lowZ,
+    _highX,
+    _highY,
+    _highZ,
+    _storageX,
+    _storageY,
+    _storageZ,
+    _blockCursor,
+    _partition,
+    _coordReadList,
+    _coordIndex,
+    _coordValueCount;
+    const _readRegistryInfo=registryPos=>{
+      if(!registryPos?.length||registryPos.length<3){
+        _log(_prefix+"Invalid registry position. Expected registryPos as [x, y, z].",1);
+        return null
+      }
+      let rx=_floor(registryPos[0])|0,
+      ry=_floor(registryPos[1])|0,
+      rz=_floor(registryPos[2])|0;
+      if(_getBlockId(rx,ry,rz)===1){return !1}
+      let registryChestPos=[rx,ry,rz],
+      region=_getStandardChestItemSlot(registryChestPos,0)?.attributes?.customAttributes?.region;
       if(!region){
-        _log(_SM_prefix+"No valid registry unit found.",1);
+        _log(_prefix+"No valid registry unit found at ("+rx+", "+ry+", "+rz+").",1);
+        return null
+      }
+      return[registryChestPos,region]
+    },
+    _create_task=(lowPos,highPos)=>{
+      if(!lowPos?.length||!highPos?.length||lowPos.length<3||highPos.length<3){
+        _log(_prefix+"Invalid region positions. Expected lowPos and highPos as [x, y, z].",1);
         return !0
       }
-      _SM_lowX=region[0];
-      _SM_lowY=region[1];
-      _SM_lowZ=region[2];
-      _SM_highX=region[3];
-      _SM_highY=region[4];
-      _SM_highZ=region[5];
-      let capacity=(_SM_highX-_SM_lowX+1)*(_SM_highY-_SM_lowY+1)*(_SM_highZ-_SM_lowZ+1)-1,
-      required=blocks.length+3>>2;
-      if(capacity<required){
-        _log(_SM_prefix+"Not enough space. Need "+required+" storage units, but region holds "+capacity+".",0);
+      let lowX=_floor(lowPos[0])|0,
+      lowY=_floor(lowPos[1])|0,
+      lowZ=_floor(lowPos[2])|0,
+      highX=_floor(highPos[0])|0,
+      highY=_floor(highPos[1])|0,
+      highZ=_floor(highPos[2])|0;
+      if(lowX>highX||lowY>highY||lowZ>highZ){
+        _log(_prefix+"Invalid region bounds. lowPos ["+lowX+", "+lowY+", "+lowZ+"] must be <= highPos ["+highX+", "+highY+", "+highZ+"] on all axes.",1);
         return !0
       }
-      _SM_storageX=_SM_lowX;
-      _SM_storageY=_SM_lowY;
-      _SM_storageZ=_SM_lowZ;
-      _SM_isChunkLoaded={};
-      _SM_blockIndex=0;
-      _SM_registrySlotIndex=1;
-      _SM_coordsCount=0;
-      _SM_taskPhase=2
-    }
-    let sx=_SM_storageX,
-    sy=_SM_storageY,
-    sz=_SM_storageZ,
-    budget=maxStorageUnitsPerTick,
-    blocksCount=blocks.length,
-    rawData,rawStart,rawEnd,escapedData,escapedCursor,escapedDataEnd,escapedChunkEnd,backslashPosition,runLength,
-    block,bx,by,bz,chunkId,storageSlotBaseIndex,chunkIndex,chunksLength;
-    while(_SM_blockIndex<blocksCount){
-      if(_SM_taskPhase===2){
-        sx++;
-        if(sx>_SM_highX){
-          sx=_SM_lowX;
-          sz++;
-          if(sz>_SM_highZ){
-            sz=_SM_lowZ;
-            sy++;
-            if(sy>_SM_highY){
-              _log(_SM_prefix+"Region overflow on storage build at ("+registryPosition[0]+", "+registryPosition[1]+", "+registryPosition[2]+").",0);
-              return !0
-            }
-          }
+      if(_getBlockId(lowX,lowY,lowZ)===1){return !1}
+      _setBlock(lowX,lowY,lowZ,_blockType);
+      _setStandardChestItemSlot([lowX,lowY,lowZ],0,_itemType,null,void 0,{
+        customAttributes:{
+          region:[lowX,lowY,lowZ,highX,highY,highZ]
         }
-        chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
-        if(!_SM_isChunkLoaded[chunkId]){
-          if(_getBlockId(sx,sy,sz)===1){return !1}
-          _SM_isChunkLoaded[chunkId]=!0
+      });
+      _log(_prefix+"Registry unit created at ("+lowX+", "+lowY+", "+lowZ+").",2);
+      return !0
+    },
+    _check_task=registryPos=>{
+      let registryInfo=_readRegistryInfo(registryPos);
+      if(registryInfo===!1){return !1}
+      if(registryInfo===null){return !0}
+      let region=registryInfo[1];
+      _log(_prefix+"Storage covers region from ("+region[0]+","+region[1]+","+region[2]+") to ("+region[3]+","+region[4]+","+region[5]+").",3);
+      return !0
+    },
+    _build_task=(registryPos,blockList,maxStorageUnitsPerTick)=>{
+      if(_taskState===1){
+        let registryInfo=_readRegistryInfo(registryPos);
+        if(registryInfo===!1){return !1}
+        if(registryInfo===null){return !0}
+        let region=registryInfo[1];
+        _lowX=region[0];
+        _lowY=region[1];
+        _lowZ=region[2];
+        _highX=region[3];
+        _highY=region[4];
+        _highZ=region[5];
+        let capacity=(_highX-_lowX+1)*(_highY-_lowY+1)*(_highZ-_lowZ+1)-1,
+        required=blockList.length+3>>2;
+        if(capacity<required){
+          _log(_prefix+"Not enough space. Need "+required+" storage units, but region holds "+capacity+".",0);
+          return !0
         }
-        _setBlock(sx,sy,sz,_SM_blockType);
-        _SM_storageX=sx;
-        _SM_storageY=sy;
-        _SM_storageZ=sz;
-        _SM_storagePosition=[sx,sy,sz];
-        _SM_partition=0;
-        _SM_taskPhase=3
+        _registryChestPos=registryInfo[0];
+        _loadedChunks={};
+        _storageX=_lowX;
+        _storageY=_lowY;
+        _storageZ=_lowZ;
+        _blockCursor=0;
+        _registrySlotIndex=1;
+        _coordValueCount=0;
+        _taskState=2
       }
-      while(_SM_partition<4&&_SM_blockIndex<blocksCount){
-        if(_SM_taskPhase===3){
-          block=blocks[_SM_blockIndex];
-          bx=block[0];
-          by=block[1];
-          bz=block[2];
-          chunkId=(bx>>5)+"|"+(by>>5)+"|"+(bz>>5);
-          if(!_SM_isChunkLoaded[chunkId]){
-            if(_getBlockId(bx,by,bz)===1){return !1}
-            _SM_isChunkLoaded[chunkId]=!0
-          }
-          rawData=_getBlockData(bx,by,bz)?.persisted?.shared?.text;
-          if(rawData?.length>0){
-            chunkIndex=0;
-            rawStart=0;
-            rawEnd=0;
-            escapedData=JSON.stringify(rawData);
-            escapedCursor=1;
-            escapedDataEnd=escapedData.length-1;
-            while(escapedCursor<escapedDataEnd){
-              escapedChunkEnd=escapedCursor+1950;
-              if(escapedChunkEnd>escapedDataEnd){escapedChunkEnd=escapedDataEnd}
-              escapedChunkEnd-=escapedData[escapedChunkEnd-1]==="\\";
-              while(escapedCursor<escapedChunkEnd){
-                backslashPosition=escapedData.indexOf("\\",escapedCursor);
-                if(backslashPosition===-1||backslashPosition>=escapedChunkEnd){
-                  runLength=escapedChunkEnd-escapedCursor;
-                  escapedCursor+=runLength;
-                  rawEnd+=runLength;
-                  break
-                }
-                if(backslashPosition>escapedCursor){
-                  runLength=backslashPosition-escapedCursor;
-                  escapedCursor+=runLength;
-                  rawEnd+=runLength
-                }
-                escapedCursor+=2;
-                rawEnd+=1
+      let sx=_storageX,
+      sy=_storageY,
+      sz=_storageZ,
+      budget=maxStorageUnitsPerTick,
+      blockCount=blockList.length,
+      rawText,rawStart,rawEnd,escapedText,escapedCursor,escapedTextEnd,escapedSegmentEnd,backslashPosition,runLength,
+      block,bx,by,bz,chunkId,storageSlotBaseIndex,segmentIndex,segmentCount;
+      while(_blockCursor<blockCount){
+        if(_taskState===2){
+          sx++;
+          if(sx>_highX){
+            sx=_lowX;
+            sz++;
+            if(sz>_highZ){
+              sz=_lowZ;
+              sy++;
+              if(sy>_highY){
+                return !0
               }
-              _SM_dataChunksBuffer[chunkIndex++]=rawData.slice(rawStart,rawEnd);
-              rawStart=rawEnd
             }
-            _SM_dataChunksBuffer.length=chunkIndex;
-            _SM_taskPhase=4
           }
-        }
-        if(_SM_taskPhase===4){
-          storageSlotBaseIndex=_SM_partition*9;
-          chunkIndex=0;
-          chunksLength=_SM_dataChunksBuffer.length;
-          while(chunkIndex<chunksLength){
-            _SM_storageItemData.customAttributes._=_SM_dataChunksBuffer[chunkIndex];
-            _setStandardChestItemSlot(_SM_storagePosition,storageSlotBaseIndex+chunkIndex,_SM_itemType,null,void 0,_SM_storageItemData);
-            chunkIndex++
-          }
-          _SM_partition++;
-          _SM_taskPhase=3
-        }
-        _SM_blockIndex++
-      }
-      if(_SM_coordsCount>=243){
-        _setStandardChestItemSlot(registryPosition,_SM_registrySlotIndex,_SM_itemType,null,void 0,_SM_registryItemData);
-        _SM_storageCoordsBuffer.length=0;
-        _SM_coordsCount=0;
-        _SM_registrySlotIndex++
-      }
-      _SM_storageCoordsBuffer[_SM_coordsCount++]=sx;
-      _SM_storageCoordsBuffer[_SM_coordsCount++]=sy;
-      _SM_storageCoordsBuffer[_SM_coordsCount++]=sz;
-      _SM_taskPhase=2;
-      budget--;
-      if(budget<=0){return !1}
-    }
-    _setStandardChestItemSlot(registryPosition,_SM_registrySlotIndex,_SM_itemType,null,void 0,_SM_registryItemData);
-    _SM_storageItemData.customAttributes._=null;
-    _SM_storageCoordsBuffer.length=0;
-    _SM_dataChunksBuffer.length=0;
-    _SM_isChunkLoaded=null;
-    _SM_storagePosition=null;
-    _log(_SM_prefix+"Built storage at ("+registryPosition[0]+", "+registryPosition[1]+", "+registryPosition[2]+").",2);
-    _SM_taskPhase=1;
-    return !0
-  },
-  _SM_dispose=(registryPosition,maxStorageUnitsPerTick)=>{
-    if(_SM_taskPhase===1){
-      if(_getBlockId(registryPosition[0],registryPosition[1],registryPosition[2])===1){return !1}
-      _SM_registryItems=_getStandardChestItems(registryPosition);
-      if(!_SM_registryItems[0]?.attributes?.customAttributes?.region){
-        _log(_SM_prefix+"No valid registry unit found.",1);
-        _SM_registryItems=null;
-        return !0
-      }
-      _SM_isChunkLoaded={};
-      _SM_registrySlotIndex=1;
-      _SM_coordsIndex=0;
-      _SM_taskPhase=2
-    }
-    let budget=maxStorageUnitsPerTick,
-    registryItem,sx,sy,sz,chunkId;
-    while(registryItem=_SM_registryItems[_SM_registrySlotIndex]){
-      if(_SM_taskPhase===2){
-        _SM_coordsList=registryItem.attributes.customAttributes._;
-        _SM_coordsIndex=0;
-        _SM_coordsCount=_SM_coordsList.length;
-        _SM_taskPhase=3
-      }
-      if(_SM_taskPhase===3){
-        while(_SM_coordsIndex<_SM_coordsCount){
-          sx=_SM_coordsList[_SM_coordsIndex];
-          sy=_SM_coordsList[_SM_coordsIndex+1];
-          sz=_SM_coordsList[_SM_coordsIndex+2];
           chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
-          if(!_SM_isChunkLoaded[chunkId]){
+          if(!_loadedChunks[chunkId]){
             if(_getBlockId(sx,sy,sz)===1){return !1}
-            _SM_isChunkLoaded[chunkId]=!0
+            _loadedChunks[chunkId]=!0
           }
-          _setBlock(sx,sy,sz,"Air");
-          _SM_coordsIndex+=3;
-          budget--;
-          if(budget<=0){return !1}
+          _setBlock(sx,sy,sz,_blockType);
+          _storageX=sx;
+          _storageY=sy;
+          _storageZ=sz;
+          _storageChestPos=[sx,sy,sz];
+          _partition=0;
+          _taskState=3
         }
-        _setStandardChestItemSlot(registryPosition,_SM_registrySlotIndex,"Air");
-        _SM_registrySlotIndex++;
-        _SM_taskPhase=2
+        while(_partition<4&&_blockCursor<blockCount){
+          if(_taskState===3){
+            block=blockList[_blockCursor];
+            if(!block?.length||block.length<3){
+              _blockCursor++;
+              continue
+            }
+            bx=_floor(block[0])|0;
+            by=_floor(block[1])|0;
+            bz=_floor(block[2])|0;
+            chunkId=(bx>>5)+"|"+(by>>5)+"|"+(bz>>5);
+            if(!_loadedChunks[chunkId]){
+              if(_getBlockId(bx,by,bz)===1){return !1}
+              _loadedChunks[chunkId]=!0
+            }
+            rawText=_getBlockData(bx,by,bz)?.persisted?.shared?.text;
+            if(rawText?.length>0){
+              segmentIndex=0;
+              rawStart=0;
+              rawEnd=0;
+              escapedText=JSON.stringify(rawText);
+              escapedCursor=1;
+              escapedTextEnd=escapedText.length-1;
+              while(escapedCursor<escapedTextEnd){
+                escapedSegmentEnd=escapedCursor+1950;
+                if(escapedSegmentEnd>escapedTextEnd){escapedSegmentEnd=escapedTextEnd}
+                escapedSegmentEnd-=escapedText[escapedSegmentEnd-1]==="\\";
+                while(escapedCursor<escapedSegmentEnd){
+                  backslashPosition=escapedText.indexOf("\\",escapedCursor);
+                  if(backslashPosition===-1||backslashPosition>=escapedSegmentEnd){
+                    runLength=escapedSegmentEnd-escapedCursor;
+                    escapedCursor+=runLength;
+                    rawEnd+=runLength;
+                    break
+                  }
+                  if(backslashPosition>escapedCursor){
+                    runLength=backslashPosition-escapedCursor;
+                    escapedCursor+=runLength;
+                    rawEnd+=runLength
+                  }
+                  escapedCursor+=2;
+                  rawEnd+=1
+                }
+                _textSegmentsBuffer[segmentIndex]=rawText.slice(rawStart,rawEnd);
+                segmentIndex++;
+                rawStart=rawEnd
+              }
+              _textSegmentsBuffer.length=segmentIndex;
+              _taskState=4
+            }
+          }
+          if(_taskState===4){
+            storageSlotBaseIndex=_partition*9;
+            segmentIndex=0;
+            segmentCount=_textSegmentsBuffer.length;
+            while(segmentIndex<segmentCount){
+              _storageSlotData.customAttributes._=_textSegmentsBuffer[segmentIndex];
+              _setStandardChestItemSlot(_storageChestPos,storageSlotBaseIndex+segmentIndex,_itemType,null,void 0,_storageSlotData);
+              segmentIndex++
+            }
+            _partition++;
+            _taskState=3
+          }
+          _blockCursor++
+        }
+        if(_coordValueCount>=243){
+          _setStandardChestItemSlot(_registryChestPos,_registrySlotIndex,_itemType,null,void 0,_registrySlotData);
+          _coordWriteBuffer.length=0;
+          _coordValueCount=0;
+          _registrySlotIndex++
+        }
+        _coordWriteBuffer[_coordValueCount++]=sx;
+        _coordWriteBuffer[_coordValueCount++]=sy;
+        _coordWriteBuffer[_coordValueCount++]=sz;
+        _taskState=2;
+        budget--;
+        if(budget<=0){return !1}
+      }
+      _setStandardChestItemSlot(_registryChestPos,_registrySlotIndex,_itemType,null,void 0,_registrySlotData);
+      _log(_prefix+"Built storage at ("+_registryChestPos[0]+", "+_registryChestPos[1]+", "+_registryChestPos[2]+").",2);
+      _storageSlotData.customAttributes._=null;
+      _coordWriteBuffer.length=0;
+      _textSegmentsBuffer.length=0;
+      _loadedChunks=null;
+      _registryChestPos=null;
+      _storageChestPos=null;
+      _taskState=1;
+      return !0
+    },
+    _dispose_task=(registryPos,maxStorageUnitsPerTick)=>{
+      if(_taskState===1){
+        let registryInfo=_readRegistryInfo(registryPos);
+        if(registryInfo===!1){return !1}
+        if(registryInfo===null){return !0}
+        _registryChestPos=registryInfo[0];
+        _loadedChunks={};
+        _registryItems=_getStandardChestItems(_registryChestPos);
+        _registrySlotIndex=1;
+        _coordIndex=0;
+        _taskState=2
+      }
+      let budget=maxStorageUnitsPerTick,
+      registryItem,sx,sy,sz,chunkId;
+      while(registryItem=_registryItems[_registrySlotIndex]){
+        if(_taskState===2){
+          _coordReadList=registryItem.attributes.customAttributes._;
+          _coordIndex=0;
+          _coordValueCount=_coordReadList.length;
+          _taskState=3
+        }
+        if(_taskState===3){
+          while(_coordIndex<_coordValueCount){
+            sx=_coordReadList[_coordIndex];
+            sy=_coordReadList[_coordIndex+1];
+            sz=_coordReadList[_coordIndex+2];
+            chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
+            if(!_loadedChunks[chunkId]){
+              if(_getBlockId(sx,sy,sz)===1){return !1}
+              _loadedChunks[chunkId]=!0
+            }
+            _setBlock(sx,sy,sz,"Air");
+            _coordIndex+=3;
+            budget--;
+            if(budget<=0){
+              return !1
+            }
+          }
+          _setStandardChestItemSlot(_registryChestPos,_registrySlotIndex,"Air");
+          _registrySlotIndex++;
+          _taskState=2
+        }
+      }
+      _log(_prefix+"Disposed storage at ("+_registryChestPos[0]+", "+_registryChestPos[1]+", "+_registryChestPos[2]+").",2);
+      _loadedChunks=null;
+      _registryChestPos=null;
+      _registryItems=null;
+      _coordReadList=null;
+      _taskState=1;
+      return !0
+    };
+    _SM_.create=(lowPosition,highPosition)=>{
+      _queue[_queue.length]=()=>_create_task(lowPosition,highPosition)
+    };
+    _SM_.check=registryPosition=>{
+      _queue[_queue.length]=()=>_check_task(registryPosition)
+    };
+    _SM_.build=(registryPosition,blockList,maxStorageUnitsPerTick=8)=>{
+      _queue[_queue.length]=()=>_build_task(registryPosition,blockList,maxStorageUnitsPerTick)
+    };
+    _SM_.dispose=(registryPosition,maxStorageUnitsPerTick=32)=>{
+      _queue[_queue.length]=()=>_dispose_task(registryPosition,maxStorageUnitsPerTick)
+    };
+    _SM_tick=()=>{
+      let isQueueActive=_queueCursor<_queue.length;
+      while(isQueueActive){
+        try{
+          if(!_queue[_queueCursor]()){break}
+        }catch(error){
+          _taskState=1;
+          _log(_prefix+"Task error on tick - "+error.name+": "+error.message,0)
+        }
+        isQueueActive=++_queueCursor<_queue.length
+      }
+      if(!isQueueActive){
+        _queue.length=0;
+        _queueCursor=0
       }
     }
-    _log(_SM_prefix+"Disposed storage at ("+registryPosition[0]+", "+registryPosition[1]+", "+registryPosition[2]+").",2);
-    _SM_isChunkLoaded=null;
-    _SM_registryItems=null;
-    _SM_coordsList=null;
-    _SM_taskPhase=1;
-    return !0
-  },
-  _SM_tick=()=>{
-    let tasksCount=_SM_taskQueue.length,
-    isActive=_SM_taskIndex<tasksCount;
-    while(isActive){
-      try{
-        if(!_SM_taskQueue[_SM_taskIndex]()){break}
-      }catch(error){
-        _SM_taskPhase=1;
-        _log(_SM_prefix+"Task error on tick - "+error.name+": "+error.message,0)
+  }
+  let _EM_setterByName=Object.create(null),
+  _EM_getterByName=Object.create(null),
+  _EM_isSetupComplete=!1,
+  _EM_setupError=null,
+  _EM_eventNames=[],
+  _EM_eventFallbacks=[],
+  _EM_installCursor=0,
+  _EM_join_handler,
+  _EM_tick_handler,
+  _EM_resetCursor;
+  const _EM_setup=()=>{
+    if(_EM_isSetupComplete){return}
+    let eventList=_CF_.EVENTS,
+    eventCount=eventList.length,
+    index=0,
+    entry;
+    while(index<eventCount){
+      entry=eventList[index];
+      let eventName,captureInterrupts,fallbackValue;
+      if(typeof entry==="string"){
+        eventName=entry
+      }else{
+        eventName=entry[0];
+        captureInterrupts=!!entry[1];
+        fallbackValue=entry[2]
       }
-      isActive=++_SM_taskIndex<tasksCount
-    }
-    if(!isActive){
-      _SM_taskIndex=0;
-      _SM_taskQueue.length=0
-    }
-  },
-  _EM_setup=()=>{
-    if(_EM_isSetupDone){return}
-    let IF_=_IF,
-    EVENT_REGISTRY=_CF.EVENT_REGISTRY,
-    ACTIVE_EVENTS=_CF.ACTIVE_EVENTS,
-    EM_config=_CF.event_manager,
-    isFrameworkEnabled=!!EM_config.is_framework_enabled,
-    defaultRetryLimit=EM_config.default_retry_limit|0;
-    defaultRetryLimit=(defaultRetryLimit&~(defaultRetryLimit>>31))+(-defaultRetryLimit>>31)+1;
-    let setupIndex=0,
-    setupCount=ACTIVE_EVENTS.length;
-    while(setupIndex<setupCount){
-      let eventName=ACTIVE_EVENTS[setupIndex];
       if(eventName==="tick"){
-        setupIndex++;
+        index++;
         continue
       }
-      let registryEntry=EVENT_REGISTRY[eventName];
-      if(registryEntry===void 0){
-        _EM_unknownActiveEvents[_EM_unknownActiveEvents.length]=eventName;
-        setupIndex++;
-        continue
-      }
-      if(!(registryEntry instanceof Array)){
-        registryEntry=EVENT_REGISTRY[eventName]=[]
-      }
-      let interruptionStatus=!!registryEntry[1];
       if(eventName!=="onPlayerJoin"){
-        _EM_activeEvents[_EM_activeEvents.length]=eventName;
-        let handler=_NOOP;
-        _EM_setEventHandler[eventName]=fn=>{handler=fn instanceof Function?fn:_NOOP};
-        _EM_getEventHandler[eventName]=()=>handler;
-        if(isFrameworkEnabled&&interruptionStatus){
-          let retryLimit=registryEntry[2];
-          if(retryLimit==null){retryLimit=defaultRetryLimit}
-          retryLimit|=0;
+        _EM_eventNames[_EM_eventNames.length]=eventName;
+        _EM_eventFallbacks[_EM_eventFallbacks.length]=fallbackValue;
+        let handler=_NO_OP;
+        _EM_setterByName[eventName]=fn=>{handler=typeof fn==="function"?fn:_NO_OP};
+        _EM_getterByName[eventName]=()=>handler;
+        if(captureInterrupts){
+          const _IF=_IF_;
           globalThis[eventName]=function(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8){
-            IF_.state=1;
-            IF_.fn=handler;
-            IF_.args=[arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8];
-            IF_.limit=retryLimit;
-            IF_.phase=1048576;
+            _IF.en=1;
+            _IF.fn=handler;
+            _IF.args=[arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8];
+            _IF.sid=0;
             try{
               return handler(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
             }finally{
-              IF_.state=0
+              _IF.en=0
             }
           }
         }else{
@@ -606,22 +561,19 @@ const configuration={
         }
       }else{
         _EM_join_handler=_JM_dispatch;
-        _EM_setEventHandler.onPlayerJoin=fn=>{_EM_join_handler=fn instanceof Function?fn:_NOOP};
-        _EM_getEventHandler.onPlayerJoin=()=>_EM_join_handler;
-        if(isFrameworkEnabled&&interruptionStatus){
-          let retryLimit=registryEntry[2];
-          if(retryLimit==null){retryLimit=defaultRetryLimit}
-          retryLimit|=0;
+        _EM_setterByName.onPlayerJoin=fn=>{_EM_join_handler=typeof fn==="function"?fn:_NO_OP};
+        _EM_getterByName.onPlayerJoin=()=>_EM_join_handler;
+        if(captureInterrupts){
+          const _IF=_IF_;
           globalThis.onPlayerJoin=function(arg0,arg1){
-            IF_.state=1;
-            IF_.fn=_EM_join_handler;
-            IF_.args=[arg0,arg1];
-            IF_.limit=retryLimit;
-            IF_.phase=1048576;
+            _IF.en=1;
+            _IF.fn=_EM_join_handler;
+            _IF.args=[arg0,arg1];
+            _IF.sid=0;
             try{
               return _EM_join_handler(arg0,arg1)
             }finally{
-              IF_.state=0
+              _IF.en=0
             }
           }
         }else{
@@ -630,54 +582,60 @@ const configuration={
           }
         }
       }
-      setupIndex++
+      index++
     }
+    _EM_setterByName.tick=fn=>{_EM_tick_handler=typeof fn==="function"?fn:_NO_OP};
+    _EM_getterByName.tick=()=>_EM_tick_handler
   },
   _EM_install=()=>{
-    let EVENT_REGISTRY=_CF.EVENT_REGISTRY,
-    activeEventsCount=_EM_activeEvents.length;
-    while(_EM_installCursor<activeEventsCount){
-      let eventName=_EM_activeEvents[_EM_installCursor];
-      _setCallbackValueFallback(eventName,EVENT_REGISTRY[eventName][0]);
+    let eventCount=_EM_eventNames.length;
+    while(_EM_installCursor<eventCount){
+      let eventName=_EM_eventNames[_EM_installCursor],
+      fallbackValue=_EM_eventFallbacks[_EM_installCursor];
+      if(fallbackValue!==void 0){
+        api.setCallbackValueFallback(eventName,fallbackValue)
+      }
       Object.defineProperty(globalThis,eventName,{
         configurable:!0,
-        set:_EM_setEventHandler[eventName],
-        get:_EM_getEventHandler[eventName]
+        set:_EM_setterByName[eventName],
+        get:_EM_getterByName[eventName]
       });
       _EM_installCursor++
     }
     if(_EM_join_handler){
       Object.defineProperty(globalThis,"onPlayerJoin",{
         configurable:!0,
-        set:fn=>{_EM_join_handler=fn instanceof Function?fn:_NOOP},
-        get:()=>_EM_join_handler
+        set:_EM_setterByName.onPlayerJoin,
+        get:_EM_getterByName.onPlayerJoin
       })
     }
     Object.defineProperty(globalThis,"tick",{
       configurable:!0,
-      set:fn=>{_EM_tick_handler=fn instanceof Function?fn:_NOOP},
-      get:()=>_EM_tick_handler
-    })
+      set:_EM_setterByName.tick,
+      get:_EM_getterByName.tick
+    });
+    _EM_eventFallbacks=null
   },
   _EM_reset=()=>{
-    let activeEventsCount=_EM_activeEvents.length;
-    while(_EM_resetCursor<activeEventsCount){
-      _EM_setEventHandler[_EM_activeEvents[_EM_resetCursor]](_NOOP);
+    let eventCount=_EM_eventNames.length;
+    while(_EM_resetCursor<eventCount){
+      _EM_setterByName[_EM_eventNames[_EM_resetCursor]](_NO_OP);
       _EM_resetCursor++
     }
-    if(_EM_join_handler){_EM_join_handler=_NOOP}
-  },
-  _TM_dispatch=()=>{
-    _IF_tick();
+    if(_EM_join_handler){_EM_join_handler=_NO_OP}
+  };
+  let _TM_boot,
+  _TM_main;
+  const _TM_dispatch=()=>{
+    _IF_.tick();
     _TM_main(50);
     _TM_boot()
   },
   _TM_install=()=>{
-    let bootEventHandler=_NOOP;
     Object.defineProperty(globalThis,"tick",{
       configurable:!0,
-      set:fn=>{_TM_main=bootEventHandler=fn instanceof Function?fn:_NOOP},
-      get:()=>bootEventHandler
+      set:fn=>{_TM_main=typeof fn==="function"?fn:_NO_OP},
+      get:()=>_TM_main
     });
     _TM_boot=_EM_tick_handler;
     _EM_tick_handler=_TM_dispatch
@@ -685,100 +643,121 @@ const configuration={
   _TM_finalize=()=>{
     Object.defineProperty(globalThis,"tick",{
       configurable:!0,
-      set:fn=>{_EM_tick_handler=fn instanceof Function?fn:_NOOP},
-      get:()=>_EM_tick_handler
+      set:_EM_setterByName.tick,
+      get:_EM_getterByName.tick
     });
     _EM_tick_handler=_TM_main;
-    _TM_boot=_NOOP
-  },
-  _JM_dispatch=(playerId,fromGameReset)=>{
-    let index=_JM_buffer.length;
-    _JM_buffer[index]=playerId;
-    _JM_buffer[index+1]=fromGameReset;
-    _JM_state[playerId]=1
+    _TM_boot=_NO_OP
+  };
+  let _JM_resetOnReboot,
+  _JM_dequeueBudgetPerTick,
+  _JM_main,
+  _JM_queue=[],
+  _JM_playerStatus={},
+  _JM_queueCursor;
+  const _JM_dispatch=(playerId,fromGameReset)=>{
+    let index=_JM_queue.length;
+    _JM_queue[index]=playerId;
+    _JM_queue[index+1]=fromGameReset;
+    _JM_playerStatus[playerId]=1
   },
   _JM_install=()=>{
     _EM_join_handler=_JM_dispatch;
-    let bootEventHandler=_NOOP;
     Object.defineProperty(globalThis,"onPlayerJoin",{
       configurable:!0,
-      set:fn=>{_JM_main=bootEventHandler=fn instanceof Function?fn:_NOOP},
-      get:()=>bootEventHandler
+      set:fn=>{_JM_main=typeof fn==="function"?fn:_NO_OP},
+      get:()=>_JM_main
     })
   },
   _JM_scan=()=>{
     if(_JM_resetOnReboot||_OM_isPrimaryBoot){
-      let playerIds=_getPlayerIds(),
+      let playerIds=api.getPlayerIds(),
       cursor=0,
-      playerId,index;
+      playerId,queueIndex;
       while(playerId=playerIds[cursor]){
-        if(!_JM_state[playerId]){
-          index=_JM_buffer.length;
-          _JM_buffer[index]=playerId;
-          _JM_buffer[index+1]=!1;
-          _JM_state[playerId]=1
+        if(!_JM_playerStatus[playerId]){
+          queueIndex=_JM_queue.length;
+          _JM_queue[queueIndex]=playerId;
+          _JM_queue[queueIndex+1]=!1;
+          _JM_playerStatus[playerId]=1
         }
         cursor++
       }
     }
   },
-  _JM_dequeue=()=>{
-    let budget=_JM_maxDequeuePerTick,
+  _JM_processQueue=()=>{
+    let budget=_JM_dequeueBudgetPerTick,
     playerId,fromGameReset;
-    while(_JM_dequeueCursor<_JM_buffer.length&&budget>0){
-      playerId=_JM_buffer[_JM_dequeueCursor];
-      if(_JM_state[playerId]!==2){
-        fromGameReset=_JM_buffer[_JM_dequeueCursor+1];
-        _JM_state[playerId]=2;
-        _JM_dequeueCursor+=2;
-        _IF.state=1;
-        _IF.fn=_JM_main;
-        _IF.args=[playerId,fromGameReset];
-        _IF.limit=2;
-        _IF.phase=1048576;
+    while(_JM_queueCursor<_JM_queue.length&&budget>0){
+      playerId=_JM_queue[_JM_queueCursor];
+      if(_JM_playerStatus[playerId]!==2){
+        fromGameReset=_JM_queue[_JM_queueCursor+1];
+        _JM_playerStatus[playerId]=2;
+        _JM_queueCursor+=2;
+        _IF_.en=1;
+        _IF_.fn=_JM_main;
+        _IF_.args=[playerId,fromGameReset];
+        _IF_.sid=0;
         try{
           _JM_main(playerId,fromGameReset)
         }catch(error){
-          _IF.state=0;
-          _log(_JM_prefix+error.name+": "+error.message,0)
+          _IF_.en=0;
+          _log(_LOG_PREFIX+" JM: "+error.name+": "+error.message,0)
         }
-        _IF.state=0;
-        _JM_dequeueCursor-=2;
+        _IF_.en=0;
+        _JM_queueCursor-=2;
         budget--
       }
-      _JM_dequeueCursor+=2
+      _JM_queueCursor+=2
     }
-    return _JM_dequeueCursor>=_JM_buffer.length
+    return _JM_queueCursor>=_JM_queue.length
   },
   _JM_finalize=()=>{
     _EM_join_handler=_JM_main;
     Object.defineProperty(globalThis,"onPlayerJoin",{
       configurable:!0,
-      set:fn=>{_EM_join_handler=fn instanceof Function?fn:_NOOP},
-      get:()=>_EM_join_handler
+      set:_EM_setterByName.onPlayerJoin,
+      get:_EM_getterByName.onPlayerJoin
     });
-    _JM_buffer.length=0
-  },
-  _BM_blockExecutor=()=>{
-    let budget=_BM_maxExecutionsPerTick,
+    _JM_queue.length=0
+  };
+  let _BM_prefix=_LOG_PREFIX+" BM: ",
+  _BM_executor,
+  _BM_blockList,
+  _BM_errorList=[null],
+  _BM_isChestMode,
+  _BM_executionBudgetPerTick,
+  _BM_errorLimit,
+  _BM_errorIndex,
+  _BM_blockCursor,
+  _BM_blockCount,
+  _BM_isRegistryLoaded,
+  _BM_loadedChunks,
+  _BM_registryItems,
+  _BM_storageItems,
+  _BM_registrySlotIndex,
+  _BM_coordIndex,
+  _BM_partition;
+  const _BM_blockExecutor=()=>{
+    let budget=_BM_executionBudgetPerTick,
     block,bx,by,bz,code;
-    while(_BM_blockIndex<_BM_blocksCount){
-      block=_BM_blocks[_BM_blockIndex];
-      if(!block||block.length<3){
-        _CL.pointer=++_BM_blockIndex;
+    while(_BM_blockCursor<_BM_blockCount){
+      block=_BM_blockList[_BM_blockCursor];
+      if(!block?.length||block.length<3){
+        _CL_.cursor=++_BM_blockCursor;
         continue
       }
-      bx=block[0];
-      by=block[1];
-      bz=block[2];
-      if((block[3]=_getBlock(bx,by,bz))==="Unloaded"){return !1}
+      bx=block[0]=_floor(block[0])|0;
+      by=block[1]=_floor(block[1])|0;
+      bz=block[2]=_floor(block[2])|0;
+      if((block[3]=api.getBlock(bx,by,bz))==="Unloaded"){return !1}
       try{
         code=_getBlockData(bx,by,bz)?.persisted?.shared?.text;
         _eval(code)
       }catch(error){
-        _BM_errors[++_BM_errorIndex*+(_BM_errors.length-1<_BM_maxErrorsCount)]=[error.name,error.message,bx,by,bz]
+        _BM_errorList[++_BM_errorIndex*+(_BM_errorList.length-1<_BM_errorLimit)]=[error.name,error.message,bx,by,bz]
       }
-      _CL.pointer=++_BM_blockIndex;
+      _CL_.cursor=++_BM_blockCursor;
       budget--;
       if(budget<=0){return !1}
     }
@@ -786,55 +765,60 @@ const configuration={
   },
   _BM_storageExecutor=()=>{
     if(!_BM_isRegistryLoaded){
-      let registryPosition=_BM_blocks[0];
-      if(!registryPosition||registryPosition.length<3){return !0}
-      if(_getBlockId(registryPosition[0],registryPosition[1],registryPosition[2])===1){return !1}
-      _BM_registryItems=_getStandardChestItems(registryPosition);
+      let registryPos=_BM_blockList[0];
+      if(!registryPos?.length||registryPos.length<3){return !0}
+      let rx=registryPos[0]=_floor(registryPos[0])|0,
+      ry=registryPos[1]=_floor(registryPos[1])|0,
+      rz=registryPos[2]=_floor(registryPos[2])|0;
+      if(_getBlockId(rx,ry,rz)===1){return !1}
+      _BM_registryItems=_getStandardChestItems([rx,ry,rz]);
       if(!_BM_registryItems[0]?.attributes?.customAttributes?.region){return !0}
       _BM_isRegistryLoaded=!0
     }
-    let budget=_BM_maxExecutionsPerTick,
-    registryItem,coordsList,coordsCount,sx,sy,sz,chunkId,code,storageSlotBaseIndex,chunkIndex,storageItem;
+    let budget=_BM_executionBudgetPerTick,
+    registryItem,coordList,coordCount,sx,sy,sz,chunkId,code,storageSlotBaseIndex,segmentIndex,storageItem;
     while(registryItem=_BM_registryItems[_BM_registrySlotIndex]){
-      coordsList=registryItem.attributes.customAttributes._;
-      coordsCount=coordsList.length-2;
-      while(_BM_coordsIndex<coordsCount){
-        sx=coordsList[_BM_coordsIndex];
-        sy=coordsList[_BM_coordsIndex+1];
-        sz=coordsList[_BM_coordsIndex+2];
+      coordList=registryItem.attributes.customAttributes._;
+      coordCount=coordList.length-2;
+      while(_BM_coordIndex<coordCount){
+        sx=coordList[_BM_coordIndex];
+        sy=coordList[_BM_coordIndex+1];
+        sz=coordList[_BM_coordIndex+2];
         chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
-        if(!_BM_isChunkLoaded[chunkId]){
+        if(!_BM_loadedChunks[chunkId]){
           if(_getBlockId(sx,sy,sz)===1){return !1}
-          _BM_isChunkLoaded[chunkId]=!0
+          _BM_loadedChunks[chunkId]=!0
         }
         if(_BM_partition===0){
           _BM_storageItems=_getStandardChestItems([sx,sy,sz])
         }
         while(_BM_partition<4){
           code="";storageSlotBaseIndex=_BM_partition*9;
-          chunkIndex=0;
-          while(chunkIndex<9&&(storageItem=_BM_storageItems[storageSlotBaseIndex+chunkIndex])){
+          segmentIndex=0;
+          while(segmentIndex<9&&(storageItem=_BM_storageItems[storageSlotBaseIndex+segmentIndex])){
             code+=storageItem.attributes.customAttributes._;
-            chunkIndex++
+            segmentIndex++
           }
-          if(chunkIndex===0){
-            _CL.pointer++;
+          if(segmentIndex===0){
+            _CL_.cursor++;
             break
           }
           try{
             _eval(code)
           }catch(error){
-            _BM_errors[++_BM_errorIndex*+(_BM_errors.length-1<_BM_maxErrorsCount)]=[error.name,error.message,sx,sy,sz,_BM_partition]
+            _BM_errorList[++_BM_errorIndex*+(_BM_errorList.length-1<_BM_errorLimit)]=[error.name,error.message,sx,sy,sz,_BM_partition]
           }
           _BM_partition++;
-          _CL.pointer++;
+          _CL_.cursor++;
           budget--;
-          if(budget<=0){return !1}
+          if(budget<=0){
+            return !1
+          }
         }
         _BM_partition=0;
-        _BM_coordsIndex+=3
+        _BM_coordIndex+=3
       }
-      _BM_coordsIndex=0;
+      _BM_coordIndex=0;
       _BM_registrySlotIndex++
     }
     return !0
@@ -843,34 +827,45 @@ const configuration={
     _BM_executor=_BM_isChestMode?_BM_storageExecutor:_BM_blockExecutor
   },
   _BM_finalize=()=>{
-    _BM_errors[0]=null;
-    _BM_isChunkLoaded=null;
+    _BM_errorList[0]=null;
+    _BM_loadedChunks=null;
     _BM_registryItems=null;
     _BM_storageItems=null
-  },
-  _OM_bootLogs=showErrors=>{
-    let message="Code was loaded in "+_OM_loadTimeTicks*50+" ms",
-    errorsCount=_BM_errors.length-1;
-    if(showErrors){
-      message+=errorsCount>0?" with "+errorsCount+" error"+(errorsCount===1?"":"s")+".":" with 0 errors."
+  };
+  let _OM_prefix=_LOG_PREFIX+" OM: ",
+  _OM_bootState=-2,
+  _OM_isPrimaryBoot=!0,
+  _OM_tickCount=-1,
+  _OM_isRunning=!1,
+  _OM_bootDelayTicks,
+  _OM_showBootStatus,
+  _OM_showErrors,
+  _OM_showExecutionInfo,
+  _OM_loadDurationTicks;
+  const _OM_logBootStatus=showErrorCount=>{
+    let message="Code was loaded in "+_OM_loadDurationTicks*50+" ms",
+    errorCount=_BM_errorList.length-1;
+    if(showErrorCount){
+      message+=errorCount>0?" with "+errorCount+" error"+(errorCount===1?"":"s")+".":" with 0 errors."
     }else{
       message+="."
     }
-    _log(_OM_prefix+message,1+(errorsCount<=0))
+    _log(_OM_prefix+message,1+(errorCount<=0))
   },
-  _OM_errorLogs=showSuccess=>{
-    let errorsCount=_BM_errors.length-1;
-    if(errorsCount>0){
-      let message="Code execution error"+(errorsCount===1?"":"s")+":",
+  _OM_logErrors=showSuccess=>{
+    let errorCount=_BM_errorList.length-1;
+    if(errorCount>0){
+      let message="Code execution error"+(errorCount===1?"":"s")+":",
       error;
       if(_BM_isChestMode){
-        for(let index=1;index<=errorsCount;index++){
-          error=_BM_errors[index];
+        for(let index=1;index<=errorCount;index++){
+          error=_BM_errorList[index];
           message+="\n"+error[0]+" at ("+error[2]+", "+error[3]+", "+error[4]+") in partition ("+error[5]+"): "+error[1]
         }
       }else{
-        for(let index=1;index<=errorsCount;index++){
-          error=_BM_errors[index];message+="\n"+error[0]+" at ("+error[2]+", "+error[3]+", "+error[4]+"): "+error[1]
+        for(let index=1;index<=errorCount;index++){
+          error=_BM_errorList[index];
+          message+="\n"+error[0]+" at ("+error[2]+", "+error[3]+", "+error[4]+"): "+error[1]
         }
       }
       _log(_BM_prefix+message,0)
@@ -878,22 +873,22 @@ const configuration={
       _log(_BM_prefix+"No code execution errors.",2)
     }
   },
-  _OM_executionLogs=()=>{
+  _OM_logExecutionInfo=()=>{
     let message="",
     block;
     if(_BM_isChestMode){
       if(_BM_isRegistryLoaded){
-        block=_BM_blocks[0];
+        block=_BM_blockList[0];
         message="Executed storage data at ("+block[0]+", "+block[1]+", "+block[2]+")."
       }else{
         message="No storage data found."
       }
     }else{
       let amount=0,
-      blocksCount=_BM_blocks.length;
-      for(let index=0;index<blocksCount;index++){
-        block=_BM_blocks[index];
-        if(block[3]){
+      blockCount=_BM_blockList.length;
+      for(let index=0;index<blockCount;index++){
+        block=_BM_blockList[index];
+        if(block?.[3]){
           message+='\n"'+block[3]+'" at ('+block[0]+", "+block[1]+", "+block[2]+")";
           amount++
         }
@@ -902,47 +897,44 @@ const configuration={
     }
     _log(_BM_prefix+message,3)
   },
-  _OM_completeLogs=(showBoot,showErrors,showExecution)=>{
-    if(_EM_unknownActiveEvents.length){
-      _log(_EM_prefix+'Unknown active events: "'+_EM_unknownActiveEvents.join('", "')+'".',1)
-    }
-    if(showBoot){
-      _OM_bootLogs(showErrors)
+  _OM_logReport=(showBootStatus,showErrors,showExecutionInfo)=>{
+    if(showBootStatus){
+      _OM_logBootStatus(showErrors)
     }
     if(showErrors){
-      _OM_errorLogs(!showBoot)
+      _OM_logErrors(!showBootStatus)
     }
-    if(showExecution){
-      _OM_executionLogs()
+    if(showExecutionInfo){
+      _OM_logExecutionInfo()
     }
   },
   _OM_tick=()=>{
-    _OM_tickNum++;
-    if(_OM_phase<3){
-      if(_OM_phase===-2){
-        if(!_EM_isSetupDone&&_OM_tickNum>20){
-          let message=_EM_prefix+"Error on primary setup - "+_EM_setupError?.[0]+": "+_EM_setupError?.[1]+".",
-          playerIds=_getPlayerIds(),
-          index=0,
+    _OM_tickCount++;
+    if(_OM_bootState<3){
+      if(_OM_bootState===-2){
+        if(!_EM_isSetupComplete&&_OM_tickCount>20){
+          let message=_LOG_PREFIX+" EM: Error on primary setup - "+_EM_setupError?.[0]+": "+_EM_setupError?.[1]+".",
+          playerIds=api.getPlayerIds(),
+          cursor=0,
           playerId;
-          while(playerId=playerIds[index]){
+          while(playerId=playerIds[cursor]){
             if(api.checkValid(playerId)){
               api.kickPlayer(playerId,message)
             }
-            index++
+            cursor++
           }
         }
         return
       }
-      if(_OM_phase===0){
+      if(_OM_bootState===0){
         _establish();
-        _OM_phase=1
+        _OM_bootState=1
       }
-      if(_OM_phase===1){
-        if(_OM_tickNum<_OM_bootDelayTicks){return}
-        _OM_phase=2
+      if(_OM_bootState===1){
+        if(_OM_tickCount<_OM_bootDelayTicks){return}
+        _OM_bootState=2
       }
-      if(_OM_phase===2){
+      if(_OM_bootState===2){
         if(_OM_isPrimaryBoot){
           _EM_install()
         }else{
@@ -954,123 +946,153 @@ const configuration={
         }
         _BM_install();
         _TM_install();
-        _OM_phase=3
+        _OM_bootState=3
       }
     }
-    if(_OM_phase===3&&_BM_executor()){
+    if(_OM_bootState===3&&_BM_executor()){
       _BM_finalize();
-      _OM_phase=4+!_EM_join_handler
+      _OM_bootState=4+!_EM_join_handler
     }
-    if(_OM_phase===4&&_JM_dequeue()){
+    if(_OM_bootState===4&&_JM_processQueue()){
       _JM_finalize();
-      _OM_phase=5
+      _OM_bootState=5
     }
-    if(_OM_phase===5){
+    if(_OM_bootState===5){
       _TM_finalize();
-      _CL.isPrimaryBoot=_OM_isPrimaryBoot=!1;
-      _CL.isRunning=_OM_isRunning=!1;
-      _OM_phase=-1;
-      _OM_loadTimeTicks=_OM_tickNum-_OM_bootDelayTicks+1;
-      _OM_completeLogs(_OM_showBootLogs,_OM_showErrorLogs,_OM_showExecutionLogs)
+      _CL_.isPrimaryBoot=_OM_isPrimaryBoot=!1;
+      _CL_.isRunning=_OM_isRunning=!1;
+      _OM_bootState=-1;
+      _OM_loadDurationTicks=_OM_tickCount-_OM_bootDelayTicks+1;
+      _OM_logReport(_OM_showBootStatus,_OM_showErrors,_OM_showExecutionInfo)
     }
   };
-  _IF.tick = _IF_tick;
-  Object.defineProperty(globalThis.InternalError.prototype,"name",{
-    configurable:!0,
-    get:()=>{
-      if(_IF_external){
-        if(_IF.state){
-          _IF_interrupted[_IF_enqueueId++]=[_IF.fn,_IF.args,_IF.limit,_IF.phase,_IF.cache];
-          _IF_queueSize++
-        }
-      }else{
-        _IF_element[3]=_IF.phase;
-        _IF.wasInterrupted=!1;
-        _IF_external=1
-      }
-      _IF.state=0;
-      return"InternalError"
-    }
-  });
-  _SM.create=(lowPosition,highPosition)=>{
-    _SM_taskQueue[_SM_taskQueue.length]=()=>_SM_create(lowPosition,highPosition)
-  };
-  _SM.check=registryPosition=>{
-    _SM_taskQueue[_SM_taskQueue.length]=()=>_SM_check(registryPosition)
-  };
-  _SM.build=(registryPosition,blocks,maxStorageUnitsPerTick=8)=>{
-    _SM_taskQueue[_SM_taskQueue.length]=()=>_SM_build(registryPosition,blocks,maxStorageUnitsPerTick)
-  };
-  _SM.dispose=(registryPosition,maxStorageUnitsPerTick=32)=>{
-    _SM_taskQueue[_SM_taskQueue.length]=()=>_SM_dispose(registryPosition,maxStorageUnitsPerTick)
-  };
-  _CL.SM=_SM;
-  _CL.config=_CF;
-  _CL.reboot=()=>{
+  _CL_.SM=_SM_;
+  _CL_.config=_CF_;
+  _CL_.reboot=()=>{
     if(!_OM_isRunning){
-      _OM_tickNum=0;
-      _CL.isRunning=_OM_isRunning=!0;
-      _CL.pointer=0;
+      _OM_tickCount=0;
+      _CL_.isRunning=_OM_isRunning=!0;
+      _CL_.cursor=0;
       _EM_tick_handler=_OM_tick;
-      _OM_phase=0
+      _OM_bootState=0
     }else{
       _log(_OM_prefix+"Reboot request was denied.",1)
     }
   };
-  _CL.bootLogs=(showErrors=!0)=>{
-    _OM_bootLogs(showErrors)
+  _CL_.logBootStatus=(showErrorCount=!0)=>{
+    _OM_logBootStatus(showErrorCount)
   };
-  _CL.errorLogs=(showSuccess=!0)=>{
-    _OM_errorLogs(showSuccess)
+  _CL_.logErrors=(showSuccess=!0)=>{
+    _OM_logErrors(showSuccess)
   };
-  _CL.executionLogs=()=>{
-    _OM_executionLogs()
+  _CL_.logExecutionInfo=()=>{
+    _OM_logExecutionInfo()
   };
-  _CL.completeLogs=(showBoot=!0,showErrors=!0,showExecution=!1)=>{
-    _OM_completeLogs(showBoot,showErrors,showExecution)
+  _CL_.logReport=(showBootStatus=!0,showErrors=!0,showExecutionInfo=!1)=>{
+    _OM_logReport(showBootStatus,showErrors,showExecutionInfo)
   };
   _EM_tick_handler=_OM_tick;
-  _EM_setEventHandler.tick=fn=>{_EM_tick_handler=fn instanceof Function?fn:_NOOP};
-  _EM_getEventHandler.tick=()=>_EM_tick_handler;
   globalThis.tick=function(){
     _EM_tick_handler(50);
-    if(_SM_taskQueue.length){_SM_tick()}
+    if(_SM_queue.length){_SM_tick()}
   };
   try{
-    _OM_tickNum=0;
-    _CL.isRunning=_OM_isRunning=!0;
-    _CL.pointer=0;
+    _OM_tickCount=0;
+    _CL_.isRunning=_OM_isRunning=!0;
+    _CL_.cursor=0;
     _EM_setup();
-    let configStyles=_CF.STYLES;
+    let styles=_CF_.STYLES;
     for(let type=0;type<4;type++){
-      _STYLES[type]=[{
+      _LOG_STYLES[type]=[{
         str:"",
         style:{
-          color:configStyles[type*3],
-          fontWeight:configStyles[type*3+1],
-          fontSize:configStyles[type*3+2]
+          color:styles[type*3],
+          fontWeight:styles[type*3+1],
+          fontSize:styles[type*3+2]
         }
       }]
     }
     let seal=Object.seal,
     freeze=Object.freeze;
-    seal(_CF);
-    seal(_CF.boot_manager);
-    seal(_CF.block_manager);
-    seal(_CF.join_manager);
-    seal(_CF.event_manager);
-    freeze(_CF.EVENT_REGISTRY);
-    freeze(_CF.STYLES);
-    seal(_IF);
-    freeze(_SM);
-    seal(_CL);
-    _EM_isSetupDone=!0;
-    _OM_phase=0
+    seal(_CF_);
+    seal(_CF_.OM);
+    seal(_CF_.BM);
+    seal(_CF_.JM);
+    freeze(_CF_.STYLES);
+    seal(_IF_);
+    freeze(_SM_);
+    seal(_CL_);
+    _EM_isSetupComplete=!0;
+    _OM_bootState=0
   }catch(error){
     _EM_setupError=[error.name,error.message]
   }
-  globalThis.IF=_IF;
-  globalThis.CL=_CL;
+  globalThis.IF=_IF_;
+  globalThis.CL=_CL_;
   void 0
 }
+
+
+/*
+
+A - _CF_
+B - _IF_
+C - _SM_
+D - _CL_
+E -_eval
+F - _floor
+G - _getBlockId
+H - _getBlockData
+I - _getStandardChestItems
+J - _NO_OP
+K - _LOG_STYLES
+L - _LOG_PREFIX
+_A - _SM_queue
+_B - _SM_tick
+M - _EM_setterByName
+N - _EM_getterByName
+O - _EM_isSetupComplete
+P - _EM_setupError
+Q - _EM_eventNames
+R - _EM_eventFallbacks
+S - _EM_installCursor
+T - _EM_join_handler
+U - _EM_tick_handler
+V - _EM_resetCursor
+W - _TM_boot
+X - _TM_main
+Y - _JM_resetOnReboot
+Z - _JM_dequeueBudgetPerTick
+a - _JM_main
+b - _JM_queue
+c - _JM_playerStatus
+d - _JM_queueCursor
+e - _BM_prefix
+f - _BM_blockList
+g - _BM_errorList
+h - _BM_isChestMode
+i - _BM_executionBudgetPerTick
+j - _BM_errorLimit
+k - _BM_errorIndex
+l - _BM_blockCursor
+m - _BM_blockCount
+n - _BM_isRegistryLoaded
+o - _BM_loadedChunks
+p - _BM_registryItems
+q - _BM_storageItems
+r - _BM_registrySlotIndex
+s - _BM_coordIndex
+t - _BM_partition
+_C - _OM_prefix
+u - _OM_bootState
+v - _OM_isPrimaryBoot
+w - _OM_tickCount
+x - _OM_isRunning
+y - _OM_bootDelayTicks
+_D - _OM_showBootStatus
+_E - _OM_showErrors
+_F - _OM_showExecutionInfo
+z - _OM_loadDurationTicks
+
+*/
 
