@@ -1195,8 +1195,8 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
   </summary>
 
 ```js
-// Code Loader v2026-02-29-0001
-// Interruption Framework v2026-02-29-0001
+// Code Loader v2026-03-01-0001
+// Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
 ```
