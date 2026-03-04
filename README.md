@@ -1087,10 +1087,9 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
 
   <ul>
     <li>
-      <a href="https://youtu.be/LCQQ6GEvne4">
+      <a href="https://youtu.be">
         <code><b>Overview on YouTube</b></code>
       </a><br>
-      <code>(v2026-02-24-0001 — outdated; new is in progress...)</code>
     </li>
   </ul>
 
