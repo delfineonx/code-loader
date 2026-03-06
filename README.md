@@ -155,12 +155,12 @@ onPlayerChat = function (playerId, chatMessage, channelName) { }; // (27, 4, 10)
 
 tick = () => {
   if (CL.isRunning) { return; }
-  // your tick logic
+  // your tick logic...
 };
 
 onBlockStand = (...) => {
   if (CL.isRunning) { return; }
-  // your onBlockStand logic
+  // your onBlockStand logic...
 };
 ```
 
@@ -914,10 +914,12 @@ if (myId === null) {
   tick = () => {
     if(!CL.isRunning) {
       const om = CL.config.OM;
+      
       om.boot_delay_ms = 0;
       om.show_boot_status = true;
       om.show_errors = true;
       CL.config.BLOCKS = blockList;
+      
       CL.reboot();
     }
   };
@@ -1087,7 +1089,7 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
 
   <ul>
     <li>
-      <a href="https://youtu.be">
+      <a href="https://youtu.be/enxQP-3crGM">
         <code><b>Overview on YouTube</b></code>
       </a><br>
     </li>
@@ -1194,7 +1196,7 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
   </summary>
 
 ```js
-// Code Loader v2026-03-01-0001
+// Code Loader v2026-03-06-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0

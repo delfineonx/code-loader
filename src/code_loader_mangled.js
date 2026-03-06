@@ -1,4 +1,4 @@
-// Code Loader v2026-03-01-0001
+// Code Loader v2026-03-06-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -290,10 +290,10 @@ const configuration = {
       K=f,
       L=g,
       W=I,
-      Z=C.length,
-      j,k,m,n,o,p,q,r,s,
-      t,u,v,w,x,y,z,_A;
-      while(h<Z){
+      j=C.length,
+      k,m,n,o,p,q,r,s,t,
+      u,v,w,x,y,z,_,__;
+      while(h<j){
         if(M===2){
           J++;
           if(J>b){
@@ -307,10 +307,10 @@ const configuration = {
               }
             }
           }
-          x=(J>>5)+"|"+(K>>5)+"|"+(L>>5);
-          if(!T[x]){
+          y=(J>>5)+"|"+(K>>5)+"|"+(L>>5);
+          if(!T[y]){
             if(G(J,K,L)===1){return !1}
-            T[x]=!0
+            T[y]=!0
           }
           A(J,K,L,N);
           e=J;
@@ -320,65 +320,65 @@ const configuration = {
           i=0;
           M=3
         }
-        while(i<4&&h<Z){
+        while(i<4&&h<j){
           if(M===3){
-            t=C[h];
-            if(!t?.length||t.length<3){
+            u=C[h];
+            if(!u?.length||u.length<3){
               h++;
               continue
             }
-            u=F(t[0])|0;
-            v=F(t[1])|0;
-            w=F(t[2])|0;
-            x=(u>>5)+"|"+(v>>5)+"|"+(w>>5);
-            if(!T[x]){
-              if(G(u,v,w)===1){return !1}
-              T[x]=!0
+            v=F(u[0])|0;
+            w=F(u[1])|0;
+            x=F(u[2])|0;
+            y=(v>>5)+"|"+(w>>5)+"|"+(x>>5);
+            if(!T[y]){
+              if(G(v,w,x)===1){return !1}
+              T[y]=!0
             }
-            j=H(u,v,w)?.persisted?.shared?.text;
-            if(j?.length>0){
-              z=0;
-              k=0;
+            k=H(v,w,x)?.persisted?.shared?.text;
+            if(k?.length>0){
+              _=0;
               m=0;
-              n=JSON.stringify(j);
-              o=1;
-              p=n.length-1;
-              while(o<p){
-                q=o+1950;
-                if(q>p){q=p}
-                q-=n[q-1]==="\\";
-                while(o<q){
-                  r=n.indexOf("\\",o);
-                  if(r===-1||r>=q){
-                    s=q-o;
-                    o+=s;
-                    m+=s;
+              n=0;
+              o=JSON.stringify(k);
+              p=1;
+              q=o.length-1;
+              while(p<q){
+                r=p+1950;
+                if(r>q){r=q}
+                r-=o[r-1]==="\\";
+                while(p<r){
+                  s=o.indexOf("\\",p);
+                  if(s===-1||s>=r){
+                    t=r-p;
+                    p+=t;
+                    n+=t;
                     break
                   }
-                  if(r>o){
-                    s=r-o;
-                    o+=s;
-                    m+=s
+                  if(s>p){
+                    t=s-p;
+                    p+=t;
+                    n+=t
                   }
-                  o+=2;
-                  m+=1
+                  p+=2;
+                  n+=1
                 }
-                S[z]=j.slice(k,m);
-                z++;
-                k=m
+                S[_]=k.slice(m,n);
+                _++;
+                m=n
               }
-              S.length=z;
+              S.length=_;
               M=4
             }
           }
           if(M===4){
-            y=i*9;
-            z=0;
-            _A=S.length;
-            while(z<_A){
-              P.customAttributes._=S[z];
-              D(V,y+z,O,null,void 0,P);
-              z++
+            z=i*9;
+            _=0;
+            __=S.length;
+            while(_<__){
+              P.customAttributes._=S[_];
+              D(V,z+_,O,null,void 0,P);
+              _++
             }
             i++;
             M=3
@@ -422,7 +422,7 @@ const configuration = {
         M=2
       }
       let F=C,
-      H,I,J,K,L;
+      H,J,K,L,N;
       while(H=W[X]){
         if(M===2){
           j=H.attributes.customAttributes._;
@@ -432,15 +432,15 @@ const configuration = {
         }
         if(M===3){
           while(k<l){
-            I=j[k];
-            J=j[k+1];
-            K=j[k+2];
-            L=(I>>5)+"|"+(J>>5)+"|"+(K>>5);
-            if(!T[L]){
-              if(G(I,J,K)===1){return !1}
-              T[L]=!0
+            J=j[k];
+            K=j[k+1];
+            L=j[k+2];
+            N=(J>>5)+"|"+(K>>5)+"|"+(L>>5);
+            if(!T[N]){
+              if(G(J,K,L)===1){return !1}
+              T[N]=!0
             }
-            A(I,J,K,"Air");
+            A(J,K,L,"Air");
             k+=3;
             F--;
             if(F<=0){
@@ -760,37 +760,37 @@ const configuration = {
       n=!0
     }
     let A=i,
-    B,C,F,H,J,K,L,M,N,O,P;
+    B,C,H,J,K,L,M,N,O,P,Q;
     while(B=p[r]){
       C=B.attributes.customAttributes._;
-      F=C.length-2;
-      while(s<F){
-        H=C[s];
-        J=C[s+1];
-        K=C[s+2];
-        L=(H>>5)+"|"+(J>>5)+"|"+(K>>5);
-        if(!o[L]){
-          if(G(H,J,K)===1){return !1}
-          o[L]=!0
+      H=C.length-2;
+      while(s<H){
+        J=C[s];
+        K=C[s+1];
+        L=C[s+2];
+        M=(J>>5)+"|"+(K>>5)+"|"+(L>>5);
+        if(!o[M]){
+          if(G(J,K,L)===1){return !1}
+          o[M]=!0
         }
         if(t===0){
-          q=I([H,J,K])
+          q=I([J,K,L])
         }
         while(t<4){
-          M="";N=t*9;
-          O=0;
-          while(O<9&&(P=q[N+O])){
-            M+=P.attributes.customAttributes._;
-            O++
+          N="";O=t*9;
+          P=0;
+          while(P<9&&(Q=q[O+P])){
+            N+=Q.attributes.customAttributes._;
+            P++
           }
-          if(O===0){
+          if(P===0){
             D.cursor++;
             break
           }
           try{
-            E(M)
-          }catch(Q){
-            g[++k*+(g.length-1<j)]=[Q.name,Q.message,H,J,K,t]
+            E(N)
+          }catch(R){
+            g[++k*+(g.length-1<j)]=[R.name,R.message,J,K,L,t]
           }
           t++;
           D.cursor++;
