@@ -1,4 +1,4 @@
-// Code Loader v2026-03-06-0001
+// Code Loader v2026-03-08-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -11,10 +11,10 @@ const configuration = {
     /* ... */
   ],
   OM: {
-    boot_delay_ms: 100,
     show_boot_status: true,
     show_errors: true,
     show_execution_info: false,
+    globals_to_keep: [],
   },
   BM: {
     is_chest_mode: false,
@@ -22,8 +22,8 @@ const configuration = {
     max_error_count: 32,
   },
   JM: {
-    reset_on_reboot: true,
     dequeue_budget_per_tick: 8,
+    players_to_skip: [],
   },
   STYLES: [
     "#FF775E", "500", "0.95rem",
@@ -32,6 +32,7 @@ const configuration = {
     "#52B2FF", "500", "0.95rem",
   ],
 };
+
 
 {
   const _CF_=configuration,
@@ -61,15 +62,21 @@ const configuration = {
     logErrors:null,
     logExecutionInfo:null,
     logReport:null
-  },
+  };
+  let _globalThis=globalThis,
+  _create=Object.create,
+  _freeze=Object.freeze,
+  _seal=Object.seal,
+  _defineProperty=Object.defineProperty,
   _eval=eval,
   _floor=Math.floor,
   _getBlockId=api.getBlockId,
   _getBlockData=api.getBlockData,
   _getStandardChestItems=api.getStandardChestItems,
-  _NO_OP=Object.freeze(function(){}),
+  _NO_OP=_freeze(function(){}),
+  _LOG_PREFIX="Code Loader",
   _LOG_STYLES=[],
-  _LOG_PREFIX="Code Loader";
+  _criticalError=null;
   const _log=(message,type)=>{
     let styledText=_LOG_STYLES[type];
     styledText[0].str=message;
@@ -84,15 +91,15 @@ const configuration = {
     _TM_boot=_NO_OP;
     _TM_main=_NO_OP;
     if(_EM_join_handler){
-      _JM_resetOnReboot=!!JM_config.reset_on_reboot;
       _JM_dequeueBudgetPerTick=JM_config.dequeue_budget_per_tick|0;
       _JM_dequeueBudgetPerTick=(_JM_dequeueBudgetPerTick&~(_JM_dequeueBudgetPerTick>>31))+(-_JM_dequeueBudgetPerTick>>31)+1;
+      _JM_playersToSkipList=JM_config.players_to_skip;
+      _JM_playersToSkipMap=_JM_playersToSkipList instanceof Array?_create(null):null;
+      _JM_setupCursor=0;
       _JM_main=_NO_OP;
       if(!_OM_isPrimaryBoot){
-        _JM_queue.length=0;
-        if(_JM_resetOnReboot){
-          _JM_playerStatus={}
-        }
+        _JM_queue=[];
+        _JM_playerStatus=_create(null)
       }
       _JM_queueCursor=0
     }
@@ -105,26 +112,29 @@ const configuration = {
     _BM_errorList.length=1;
     _BM_errorList[0]=null;
     _BM_errorIndex=0;
-    _BM_blockCursor=0;
-    _BM_blockCount=_BM_blockList.length;
     if(_BM_isChestMode){
       _BM_isRegistryLoaded=!1;
-      _BM_loadedChunks={};
+      _BM_loadedChunks=_create(null);
       _BM_registrySlotIndex=1;
       _BM_coordIndex=0;
       _BM_partition=0
+    }else{
+      _BM_blockCursor=0;
+      _BM_blockCount=_BM_blockList.length
     }
-    _OM_bootDelayTicks=(OM_config.boot_delay_ms|0)*.02|0;
-    _OM_bootDelayTicks=_OM_bootDelayTicks&~(_OM_bootDelayTicks>>31);
     _OM_showBootStatus=!!OM_config.show_boot_status;
     _OM_showErrors=!!OM_config.show_errors;
     _OM_showExecutionInfo=!!OM_config.show_execution_info;
+    _OM_globalsToKeepList=OM_config.globals_to_keep;
+    _OM_globalsToKeepMap=_OM_globalsToKeepList instanceof Array?_create(null):null;
+    _OM_setupCursor=0;
+    _OM_resetCursor=0;
     _OM_loadDurationTicks=-1
   };
   {
     const _IF=_IF_,
-    _NO_OP=_IF.fn=Object.freeze(()=>{}),
-    _NO_ARGS=_IF.args=_IF.noArgs=Object.freeze([]),
+    _NO_OP=_IF.fn=_freeze(()=>{}),
+    _NO_ARGS=_IF.args=_IF.noArgs=_freeze([]),
     _NO_TASK=[null,_NO_ARGS,null,0],
     _queue=[];
     let _task=_NO_TASK,
@@ -166,7 +176,7 @@ const configuration = {
       _IF.rcnt=0;
       _external=1
     };
-    Object.defineProperty(globalThis.InternalError.prototype,"name",{
+    _defineProperty(_globalThis.InternalError.prototype,"name",{
       configurable:!0,
       get:()=>{
         if(_external){
@@ -271,7 +281,7 @@ const configuration = {
       if(registryInfo===!1){return !1}
       if(registryInfo===null){return !0}
       let region=registryInfo[1];
-      _log(_prefix+"Storage covers region from ("+region[0]+","+region[1]+","+region[2]+") to ("+region[3]+","+region[4]+","+region[5]+").",3);
+      _log(_prefix+"Storage covers region from ("+region[0]+", "+region[1]+", "+region[2]+") to ("+region[3]+", "+region[4]+", "+region[5]+").",3);
       return !0
     },
     _build_task=(registryPos,blockList,maxStorageUnitsPerTick)=>{
@@ -292,8 +302,10 @@ const configuration = {
           _log(_prefix+"Not enough space. Need "+required+" storage units, but region holds "+capacity+".",0);
           return !0
         }
+        _coordWriteBuffer.length=0;
+        _textSegmentsBuffer.length=0;
+        _loadedChunks=_create(null);
         _registryChestPos=registryInfo[0];
-        _loadedChunks={};
         _storageX=_lowX;
         _storageY=_lowY;
         _storageZ=_lowZ;
@@ -324,9 +336,9 @@ const configuration = {
             }
           }
           chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
-          if(!_loadedChunks[chunkId]){
+          if(!(chunkId in _loadedChunks)){
             if(_getBlockId(sx,sy,sz)===1){return !1}
-            _loadedChunks[chunkId]=!0
+            _loadedChunks[chunkId]=1
           }
           _setBlock(sx,sy,sz,_blockType);
           _storageX=sx;
@@ -349,7 +361,7 @@ const configuration = {
             chunkId=(bx>>5)+"|"+(by>>5)+"|"+(bz>>5);
             if(!_loadedChunks[chunkId]){
               if(_getBlockId(bx,by,bz)===1){return !1}
-              _loadedChunks[chunkId]=!0
+              _loadedChunks[chunkId]=1
             }
             rawText=_getBlockData(bx,by,bz)?.persisted?.shared?.text;
             if(rawText?.length>0){
@@ -430,8 +442,8 @@ const configuration = {
         let registryInfo=_readRegistryInfo(registryPos);
         if(registryInfo===!1){return !1}
         if(registryInfo===null){return !0}
+        _loadedChunks=_create(null);
         _registryChestPos=registryInfo[0];
-        _loadedChunks={};
         _registryItems=_getStandardChestItems(_registryChestPos);
         _registrySlotIndex=1;
         _coordIndex=0;
@@ -452,16 +464,14 @@ const configuration = {
             sy=_coordReadList[_coordIndex+1];
             sz=_coordReadList[_coordIndex+2];
             chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
-            if(!_loadedChunks[chunkId]){
+            if(!(chunkId in _loadedChunks)){
               if(_getBlockId(sx,sy,sz)===1){return !1}
-              _loadedChunks[chunkId]=!0
+              _loadedChunks[chunkId]=1
             }
             _setBlock(sx,sy,sz,"Air");
             _coordIndex+=3;
             budget--;
-            if(budget<=0){
-              return !1
-            }
+            if(budget<=0){return !1}
           }
           _setStandardChestItemSlot(_registryChestPos,_registrySlotIndex,"Air");
           _registrySlotIndex++;
@@ -505,18 +515,14 @@ const configuration = {
       }
     }
   }
-  let _EM_setterByName=Object.create(null),
-  _EM_getterByName=Object.create(null),
-  _EM_isSetupComplete=!1,
-  _EM_setupError=null,
-  _EM_eventNames=[],
+  let _EM_eventNames=[],
   _EM_eventFallbacks=[],
-  _EM_installCursor=0,
+  _EM_setterByName=_create(null),
+  _EM_getterByName=_create(null),
   _EM_join_handler,
   _EM_tick_handler,
   _EM_resetCursor;
   const _EM_setup=()=>{
-    if(_EM_isSetupComplete){return}
     let eventList=_CF_.EVENTS,
     eventCount=eventList.length,
     index=0,
@@ -542,8 +548,8 @@ const configuration = {
         _EM_setterByName[eventName]=fn=>{handler=typeof fn==="function"?fn:_NO_OP};
         _EM_getterByName[eventName]=()=>handler;
         if(captureInterrupts){
-          const _IF=_IF_;
-          globalThis[eventName]=function(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8){
+          let _IF=_IF_;
+          _globalThis[eventName]=function(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8){
             _IF.en=1;
             _IF.fn=handler;
             _IF.args=[arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8];
@@ -555,7 +561,7 @@ const configuration = {
             }
           }
         }else{
-          globalThis[eventName]=function(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8){
+          _globalThis[eventName]=function(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8){
             return handler(arg0,arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8)
           }
         }
@@ -564,8 +570,8 @@ const configuration = {
         _EM_setterByName.onPlayerJoin=fn=>{_EM_join_handler=typeof fn==="function"?fn:_NO_OP};
         _EM_getterByName.onPlayerJoin=()=>_EM_join_handler;
         if(captureInterrupts){
-          const _IF=_IF_;
-          globalThis.onPlayerJoin=function(arg0,arg1){
+          let _IF=_IF_;
+          _globalThis.onPlayerJoin=function(arg0,arg1){
             _IF.en=1;
             _IF.fn=_EM_join_handler;
             _IF.args=[arg0,arg1];
@@ -577,7 +583,7 @@ const configuration = {
             }
           }
         }else{
-          globalThis[eventName]=function(arg0,arg1){
+          _globalThis[eventName]=function(arg0,arg1){
             return _EM_join_handler(arg0,arg1)
           }
         }
@@ -589,27 +595,20 @@ const configuration = {
   },
   _EM_install=()=>{
     let eventCount=_EM_eventNames.length;
-    while(_EM_installCursor<eventCount){
-      let eventName=_EM_eventNames[_EM_installCursor],
-      fallbackValue=_EM_eventFallbacks[_EM_installCursor];
+    while(_EM_resetCursor<eventCount){
+      let eventName=_EM_eventNames[_EM_resetCursor],
+      fallbackValue=_EM_eventFallbacks[_EM_resetCursor];
       if(fallbackValue!==void 0){
         api.setCallbackValueFallback(eventName,fallbackValue)
       }
-      Object.defineProperty(globalThis,eventName,{
+      _defineProperty(_globalThis,eventName,{
         configurable:!0,
         set:_EM_setterByName[eventName],
         get:_EM_getterByName[eventName]
       });
-      _EM_installCursor++
+      _EM_resetCursor++
     }
-    if(_EM_join_handler){
-      Object.defineProperty(globalThis,"onPlayerJoin",{
-        configurable:!0,
-        set:_EM_setterByName.onPlayerJoin,
-        get:_EM_getterByName.onPlayerJoin
-      })
-    }
-    Object.defineProperty(globalThis,"tick",{
+    _defineProperty(_globalThis,"tick",{
       configurable:!0,
       set:_EM_setterByName.tick,
       get:_EM_getterByName.tick
@@ -622,17 +621,21 @@ const configuration = {
       _EM_setterByName[_EM_eventNames[_EM_resetCursor]](_NO_OP);
       _EM_resetCursor++
     }
-    if(_EM_join_handler){_EM_join_handler=_NO_OP}
   };
   let _TM_boot,
   _TM_main;
   const _TM_dispatch=()=>{
     _IF_.tick();
     _TM_main(50);
-    _TM_boot()
+    try{
+      _TM_boot()
+    }catch(error){
+      _criticalError=[error.name,error.message];
+      _OM_bootState=-2
+    }
   },
   _TM_install=()=>{
-    Object.defineProperty(globalThis,"tick",{
+    _defineProperty(_globalThis,"tick",{
       configurable:!0,
       set:fn=>{_TM_main=typeof fn==="function"?fn:_NO_OP},
       get:()=>_TM_main
@@ -641,7 +644,7 @@ const configuration = {
     _EM_tick_handler=_TM_dispatch
   },
   _TM_finalize=()=>{
-    Object.defineProperty(globalThis,"tick",{
+    _defineProperty(_globalThis,"tick",{
       configurable:!0,
       set:_EM_setterByName.tick,
       get:_EM_getterByName.tick
@@ -649,11 +652,13 @@ const configuration = {
     _EM_tick_handler=_TM_main;
     _TM_boot=_NO_OP
   };
-  let _JM_resetOnReboot,
-  _JM_dequeueBudgetPerTick,
+  let _JM_dequeueBudgetPerTick,
+  _JM_playersToSkipList,
+  _JM_playersToSkipMap,
+  _JM_setupCursor,
   _JM_main,
   _JM_queue=[],
-  _JM_playerStatus={},
+  _JM_playerStatus=_create(null),
   _JM_queueCursor;
   const _JM_dispatch=(playerId,fromGameReset)=>{
     let index=_JM_queue.length;
@@ -663,26 +668,34 @@ const configuration = {
   },
   _JM_install=()=>{
     _EM_join_handler=_JM_dispatch;
-    Object.defineProperty(globalThis,"onPlayerJoin",{
+    _defineProperty(_globalThis,"onPlayerJoin",{
       configurable:!0,
       set:fn=>{_JM_main=typeof fn==="function"?fn:_NO_OP},
       get:()=>_JM_main
     })
   },
+  _JM_setup=()=>{
+    let playerCount=_JM_playersToSkipList.length;
+    while(_JM_setupCursor<playerCount){
+      _JM_playersToSkipMap[_JM_playersToSkipList[_JM_setupCursor]]=1;
+      _JM_setupCursor++
+    }
+  },
   _JM_scan=()=>{
-    if(_JM_resetOnReboot||_OM_isPrimaryBoot){
-      let playerIds=api.getPlayerIds(),
-      cursor=0,
-      playerId,queueIndex;
-      while(playerId=playerIds[cursor]){
-        if(!_JM_playerStatus[playerId]){
-          queueIndex=_JM_queue.length;
-          _JM_queue[queueIndex]=playerId;
-          _JM_queue[queueIndex+1]=!1;
-          _JM_playerStatus[playerId]=1
-        }
-        cursor++
+    let playerIds=api.getPlayerIds(),
+    listIndex=0,
+    playerId,queueIndex;
+    while(listIndex<playerIds.length){
+      playerId=playerIds[listIndex];
+      if(_JM_playersToSkipMap===null||playerId in _JM_playersToSkipMap){
+        _JM_playerStatus[playerId]=2
+      }else{
+        queueIndex=_JM_queue.length;
+        _JM_queue[queueIndex]=playerId;
+        _JM_queue[queueIndex+1]=!1;
+        _JM_playerStatus[playerId]=1
       }
+      listIndex++
     }
   },
   _JM_processQueue=()=>{
@@ -691,6 +704,7 @@ const configuration = {
     while(_JM_queueCursor<_JM_queue.length&&budget>0){
       playerId=_JM_queue[_JM_queueCursor];
       if(_JM_playerStatus[playerId]!==2){
+        _eval();
         fromGameReset=_JM_queue[_JM_queueCursor+1];
         _JM_playerStatus[playerId]=2;
         _JM_queueCursor+=2;
@@ -714,12 +728,15 @@ const configuration = {
   },
   _JM_finalize=()=>{
     _EM_join_handler=_JM_main;
-    Object.defineProperty(globalThis,"onPlayerJoin",{
+    _defineProperty(_globalThis,"onPlayerJoin",{
       configurable:!0,
       set:_EM_setterByName.onPlayerJoin,
       get:_EM_getterByName.onPlayerJoin
     });
-    _JM_queue.length=0
+    _JM_playersToSkipList=null;
+    _JM_playersToSkipMap=null;
+    _JM_queue=null;
+    _JM_playerStatus=null
   };
   let _BM_prefix=_LOG_PREFIX+" BM: ",
   _BM_executor,
@@ -785,15 +802,16 @@ const configuration = {
         sy=coordList[_BM_coordIndex+1];
         sz=coordList[_BM_coordIndex+2];
         chunkId=(sx>>5)+"|"+(sy>>5)+"|"+(sz>>5);
-        if(!_BM_loadedChunks[chunkId]){
+        if(!(chunkId in _BM_loadedChunks)){
           if(_getBlockId(sx,sy,sz)===1){return !1}
-          _BM_loadedChunks[chunkId]=!0
+          _BM_loadedChunks[chunkId]=1
         }
         if(_BM_partition===0){
           _BM_storageItems=_getStandardChestItems([sx,sy,sz])
         }
         while(_BM_partition<4){
-          code="";storageSlotBaseIndex=_BM_partition*9;
+          code="";
+          storageSlotBaseIndex=_BM_partition*9;
           segmentIndex=0;
           while(segmentIndex<9&&(storageItem=_BM_storageItems[storageSlotBaseIndex+segmentIndex])){
             code+=storageItem.attributes.customAttributes._;
@@ -811,9 +829,7 @@ const configuration = {
           _BM_partition++;
           _CL_.cursor++;
           budget--;
-          if(budget<=0){
-            return !1
-          }
+          if(budget<=0){return !1}
         }
         _BM_partition=0;
         _BM_coordIndex+=3
@@ -837,12 +853,52 @@ const configuration = {
   _OM_isPrimaryBoot=!0,
   _OM_tickCount=-1,
   _OM_isRunning=!1,
-  _OM_bootDelayTicks,
+  _OM_globalsInitialList,
+  _OM_globalsInitialMap=_create(null),
   _OM_showBootStatus,
   _OM_showErrors,
   _OM_showExecutionInfo,
+  _OM_globalsToKeepList,
+  _OM_globalsToKeepMap,
+  _OM_globalsSnapshotList,
+  _OM_setupCursor,
+  _OM_resetCursor,
   _OM_loadDurationTicks;
-  const _OM_logBootStatus=showErrorCount=>{
+  const _OM_install=()=>{
+    let propertyCount=_OM_globalsInitialList?.length|0;
+    while(_OM_resetCursor<propertyCount){
+      _OM_globalsInitialMap[_OM_globalsInitialList[_OM_resetCursor]]=1;
+      _OM_resetCursor++
+    }
+    _OM_globalsInitialList=null
+  },
+  _OM_setup=()=>{
+    let propertyCount=_OM_globalsToKeepList.length;
+    while(_OM_setupCursor<propertyCount){
+      _OM_globalsToKeepMap[_OM_globalsToKeepList[_OM_setupCursor]]=1;
+      _OM_setupCursor++
+    }
+    if(_OM_globalsSnapshotList==null){
+      _OM_globalsSnapshotList=Reflect.ownKeys(_globalThis)
+    }
+  },
+  _OM_reset=()=>{
+    let propertyCount=_OM_globalsSnapshotList.length,
+    propertyName;
+    while(_OM_resetCursor<propertyCount){
+      propertyName=_OM_globalsSnapshotList[_OM_resetCursor];
+      if(!(propertyName in _OM_globalsInitialMap||propertyName in _OM_globalsToKeepMap)){
+        delete _globalThis[propertyName]
+      }
+      _OM_resetCursor++
+    }
+  },
+  _OM_finalize=()=>{
+    _OM_globalsToKeepList=null;
+    _OM_globalsToKeepMap=null;
+    _OM_globalsSnapshotList=null
+  },
+  _OM_logBootStatus=showErrorCount=>{
     let message="Code was loaded in "+_OM_loadDurationTicks*50+" ms",
     errorCount=_BM_errorList.length-1;
     if(showErrorCount){
@@ -864,8 +920,7 @@ const configuration = {
         }
       }else{
         for(let index=1;index<=errorCount;index++){
-          error=_BM_errorList[index];
-          message+="\n"+error[0]+" at ("+error[2]+", "+error[3]+", "+error[4]+"): "+error[1]
+          error=_BM_errorList[index];message+="\n"+error[0]+" at ("+error[2]+", "+error[3]+", "+error[4]+"): "+error[1]
         }
       }
       _log(_BM_prefix+message,0)
@@ -910,18 +965,19 @@ const configuration = {
   },
   _OM_tick=()=>{
     _OM_tickCount++;
-    if(_OM_bootState<3){
+    if(_OM_bootState<4){
       if(_OM_bootState===-2){
-        if(!_EM_isSetupComplete&&_OM_tickCount>20){
-          let message=_LOG_PREFIX+" EM: Error on primary setup - "+_EM_setupError?.[0]+": "+_EM_setupError?.[1]+".",
+        if(_criticalError&&_OM_tickCount>20){
+          let message=_LOG_PREFIX+": Critical error - "+_criticalError[0]+": "+_criticalError[1]+".",
           playerIds=api.getPlayerIds(),
-          cursor=0,
+          listIndex=0,
           playerId;
-          while(playerId=playerIds[cursor]){
+          while(listIndex<playerIds.length){
+            playerId=playerIds[listIndex];
             if(api.checkValid(playerId)){
               api.kickPlayer(playerId,message)
             }
-            cursor++
+            listIndex++
           }
         }
         return
@@ -931,38 +987,49 @@ const configuration = {
         _OM_bootState=1
       }
       if(_OM_bootState===1){
-        if(_OM_tickCount<_OM_bootDelayTicks){return}
+        if(_EM_join_handler){
+          _JM_install();
+          if(_JM_playersToSkipMap!==null){
+            _JM_setup()
+          }
+          _JM_scan()
+        }
         _OM_bootState=2
       }
       if(_OM_bootState===2){
         if(_OM_isPrimaryBoot){
-          _EM_install()
+          _EM_install();
+          _OM_install()
         }else{
-          _EM_reset()
+          _EM_reset();
+          if(_OM_globalsToKeepMap!==null){
+            _OM_setup();
+            _OM_reset()
+          }
+          _OM_finalize()
         }
-        if(_EM_join_handler){
-          _JM_install();
-          _JM_scan()
-        }
-        _BM_install();
-        _TM_install();
         _OM_bootState=3
       }
+      if(_OM_bootState===3){
+        _BM_install();
+        _TM_install();
+        _OM_bootState=4
+      }
     }
-    if(_OM_bootState===3&&_BM_executor()){
+    if(_OM_bootState===4&&_BM_executor()){
       _BM_finalize();
-      _OM_bootState=4+!_EM_join_handler
+      _OM_bootState=5+!_EM_join_handler
     }
-    if(_OM_bootState===4&&_JM_processQueue()){
+    if(_OM_bootState===5&&_JM_processQueue()){
       _JM_finalize();
-      _OM_bootState=5
+      _OM_bootState=6
     }
-    if(_OM_bootState===5){
+    if(_OM_bootState===6){
       _TM_finalize();
       _CL_.isPrimaryBoot=_OM_isPrimaryBoot=!1;
       _CL_.isRunning=_OM_isRunning=!1;
       _OM_bootState=-1;
-      _OM_loadDurationTicks=_OM_tickCount-_OM_bootDelayTicks+1;
+      _OM_loadDurationTicks=_OM_tickCount;
       _OM_logReport(_OM_showBootStatus,_OM_showErrors,_OM_showExecutionInfo)
     }
   };
@@ -992,7 +1059,7 @@ const configuration = {
     _OM_logReport(showBootStatus,showErrors,showExecutionInfo)
   };
   _EM_tick_handler=_OM_tick;
-  globalThis.tick=function(){
+  _globalThis.tick=function(){
     _EM_tick_handler(50);
     if(_SM_queue.length){_SM_tick()}
   };
@@ -1012,87 +1079,21 @@ const configuration = {
         }
       }]
     }
-    let seal=Object.seal,
-    freeze=Object.freeze;
-    seal(_CF_);
-    seal(_CF_.OM);
-    seal(_CF_.BM);
-    seal(_CF_.JM);
-    freeze(_CF_.STYLES);
-    seal(_IF_);
-    freeze(_SM_);
-    seal(_CL_);
-    _EM_isSetupComplete=!0;
+    _seal(_CF_);
+    _seal(_CF_.OM);
+    _seal(_CF_.BM);
+    _seal(_CF_.JM);
+    _freeze(_CF_.STYLES);
+    _seal(_IF_);
+    _freeze(_SM_);
+    _seal(_CL_);
+    _globalThis.IF=_IF_;
+    _globalThis.CL=_CL_;
+    _OM_globalsInitialList=Reflect.ownKeys(_globalThis);
     _OM_bootState=0
   }catch(error){
-    _EM_setupError=[error.name,error.message]
+    _criticalError=[error.name,error.message]
   }
-  globalThis.IF=_IF_;
-  globalThis.CL=_CL_;
   void 0
 }
-
-
-/*
-
-A - _CF_
-B - _IF_
-C - _SM_
-D - _CL_
-E -_eval
-F - _floor
-G - _getBlockId
-H - _getBlockData
-I - _getStandardChestItems
-J - _NO_OP
-K - _LOG_STYLES
-L - _LOG_PREFIX
-_A - _SM_queue
-_B - _SM_tick
-M - _EM_setterByName
-N - _EM_getterByName
-O - _EM_isSetupComplete
-P - _EM_setupError
-Q - _EM_eventNames
-R - _EM_eventFallbacks
-S - _EM_installCursor
-T - _EM_join_handler
-U - _EM_tick_handler
-V - _EM_resetCursor
-W - _TM_boot
-X - _TM_main
-Y - _JM_resetOnReboot
-Z - _JM_dequeueBudgetPerTick
-a - _JM_main
-b - _JM_queue
-c - _JM_playerStatus
-d - _JM_queueCursor
-e - _BM_prefix
-f - _BM_blockList
-g - _BM_errorList
-h - _BM_isChestMode
-i - _BM_executionBudgetPerTick
-j - _BM_errorLimit
-k - _BM_errorIndex
-l - _BM_blockCursor
-m - _BM_blockCount
-n - _BM_isRegistryLoaded
-o - _BM_loadedChunks
-p - _BM_registryItems
-q - _BM_storageItems
-r - _BM_registrySlotIndex
-s - _BM_coordIndex
-t - _BM_partition
-_C - _OM_prefix
-u - _OM_bootState
-v - _OM_isPrimaryBoot
-w - _OM_tickCount
-x - _OM_isRunning
-y - _OM_bootDelayTicks
-_D - _OM_showBootStatus
-_E - _OM_showErrors
-_F - _OM_showExecutionInfo
-z - _OM_loadDurationTicks
-
-*/
 

@@ -1,4 +1,4 @@
-// Code Loader v2026-03-06-0001
+// Code Loader v2026-03-08-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -36,10 +36,10 @@ BLOCKS: [
 [27, 4, 6],
 ],
 OM: {
-boot_delay_ms: 100,
 show_boot_status: true,
 show_errors: true,
 show_execution_info: false,
+globals_to_keep: [],
 },
 BM: {
 is_chest_mode: false, //
@@ -47,8 +47,8 @@ execution_budget_per_tick: 8, //
 max_error_count: 32,
 },
 JM: {
-reset_on_reboot: true,
 dequeue_budget_per_tick: 8,
+players_to_skip: [],
 },
 STYLES: [
 "#FF775E", "500", "0.95rem",
