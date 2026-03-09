@@ -1,4 +1,4 @@
-// Code Loader v2026-03-08-0001
+// Code Loader v2026-03-09-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -627,12 +627,7 @@ const configuration = {
   const _TM_dispatch=()=>{
     _IF_.tick();
     _TM_main(50);
-    try{
-      _TM_boot()
-    }catch(error){
-      _criticalError=[error.name,error.message];
-      _OM_bootState=-2
-    }
+    _TM_boot()
   },
   _TM_install=()=>{
     _defineProperty(_globalThis,"tick",{

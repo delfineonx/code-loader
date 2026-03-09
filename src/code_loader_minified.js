@@ -1,4 +1,4 @@
-// Code Loader v2026-03-08-0001
+// Code Loader v2026-03-09-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -57,7 +57,7 @@ $_=()=>{let C=D<B.length;while(C){try{if(!B[D]()){break}}catch(_){E=1;$(A+"Task 
 let J=[],K=[],L=$A(null),M=$A(null),$K,$L,N;
 const $M=()=>{let C=A.EVENTS,D=C.length,G=0,H;while(G<D){H=C[G];let I,N,O;if(typeof H==="string"){I=H}else{I=H[0];N=!!H[1];O=H[2]}if(I==="tick"){G++;continue}if(I!=="onPlayerJoin"){J[J.length]=I;K[K.length]=O;let P=F;L[I]=_=>{P=typeof _==="function"?_:F};M[I]=()=>P;if(N){let Q=B;E[I]=function(R,S,T,U,V,W,X,Y,Z){Q.en=1;Q.fn=P;Q.args=[R,S,T,U,V,W,X,Y,Z];Q.sid=0;try{return P(R,S,T,U,V,W,X,Y,Z)}finally{Q.en=0}}}else{E[I]=function(Q,R,S,T,U,V,W,X,Y){return P(Q,R,S,T,U,V,W,X,Y)}}}else{$K=$V;L.onPlayerJoin=_=>{$K=typeof _==="function"?_:F};M.onPlayerJoin=()=>$K;if(N){let P=B;E.onPlayerJoin=function(Q,R){P.en=1;P.fn=$K;P.args=[Q,R];P.sid=0;try{return $K(Q,R)}finally{P.en=0}}}else{E[I]=function(P,Q){return $K(P,Q)}}}G++}L.tick=_=>{$L=typeof _==="function"?_:F};M.tick=()=>$L},$N=()=>{let A=J.length;while(N<A){let B=J[N],C=K[N];if(C!==void 0){api.setCallbackValueFallback(B,C)}$D(E,B,{configurable:!0,set:L[B],get:M[B]});N++}$D(E,"tick",{configurable:!0,set:L.tick,get:M.tick});K=null},$O=()=>{let A=J.length;while(N<A){L[J[N]](F);N++}};
 let $P,$Q;
-const $R=()=>{B.tick();$Q(50);try{$P()}catch(_){I=[_.name,_.message];n=-2}},$S=()=>{$D(E,"tick",{configurable:!0,set:_=>{$Q=typeof _==="function"?_:F},get:()=>$Q});$P=$L;$L=$R},$T=()=>{$D(E,"tick",{configurable:!0,set:L.tick,get:M.tick});$L=$Q;$P=F};
+const $R=()=>{B.tick();$Q(50);$P()},$S=()=>{$D(E,"tick",{configurable:!0,set:_=>{$Q=typeof _==="function"?_:F},get:()=>$Q});$P=$L;$L=$R},$T=()=>{$D(E,"tick",{configurable:!0,set:L.tick,get:M.tick});$L=$Q;$P=F};
 let O,P,Q,R,$U,S=[],U=$A(null),V;
 const $V=(A,B)=>{let C=S.length;S[C]=A;S[C+1]=B;U[A]=1},$W=()=>{$K=$V;$D(E,"onPlayerJoin",{configurable:!0,set:_=>{$U=typeof _==="function"?_:F},get:()=>$U})},$X=()=>{let A=P.length;while(R<A){Q[P[R]]=1;R++}},$Y=()=>{let A=api.getPlayerIds(),B=0,C,D;while(B<A.length){C=A[B];if(Q===null||C in Q){U[C]=2}else{D=S.length;S[D]=C;S[D+1]=!1;U[C]=1}B++}},$Z=()=>{let A=O,C,D;while(V<S.length&&A>0){C=S[V];if(U[C]!==2){$E();D=S[V+1];U[C]=2;V+=2;B.en=1;B.fn=$U;B.args=[C,D];B.sid=0;try{$U(C,D)}catch(_){B.en=0;$(G+" JM: "+_.name+": "+_.message,0)}B.en=0;V-=2;A--}V+=2}return V>=S.length},$a=()=>{$K=$U;$D(E,"onPlayerJoin",{configurable:!0,set:L.onPlayerJoin,get:M.onPlayerJoin});P=null;Q=null;S=null;U=null};
 let W=G+" BM: ",$b,X,Y=[null],Z,a,b,c,d,e,f,g,h,i,j,k,l;

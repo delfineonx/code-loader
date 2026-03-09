@@ -1,4 +1,4 @@
-// Code Loader v2026-03-08-0001
+// Code Loader v2026-03-09-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -611,12 +611,7 @@ const configuration = {
   const $R=()=>{
     B.tick();
     $Q(50);
-    try{
-      $P()
-    }catch(_){
-      I=[_.name,_.message];
-      n=-2
-    }
+    $P()
   },
   $S=()=>{
     $D(E,"tick",{

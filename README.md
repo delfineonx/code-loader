@@ -1188,16 +1188,14 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
     </li>
     <li>
       <code>"Code Loader: Critical error - ..."</code><br>
-      A fatal loader error occurred during initialization or during the boot process.
+      A fatal loader error occurred during initialization.
       Common causes include:
       <ol>
-        <li>A syntax error or accidental edit inside the loader source.</li>
-        <li>An invalid <code>configuration</code>.</li>
-        <li>Boot-time logic running before its dependencies are ready.</li>
+        <li>Syntax error or accidental edit inside the loader source.</li>
+        <li>Invalid <code>configuration</code>.</li>
       </ol>
       <p>
-        <code><ins>Fix</ins>:</code> reinstall the loader code, then re-apply your configuration edits carefully.<br>
-        Also guard boot-time callbacks with <code>if (CL.isRunning) { return; }</code> where appropriate.
+        <code><ins>Fix</ins>:</code> reinstall the loader code, then re-apply your configuration edits carefully.
       </p>
     </li>
     <li>
@@ -1283,7 +1281,7 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
   </summary>
 
 ```js
-// Code Loader v2026-03-08-0001
+// Code Loader v2026-03-09-0001
 // Interruption Framework v2026-03-01-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
