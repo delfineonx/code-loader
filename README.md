@@ -1,29 +1,28 @@
 
----
+<hr>
 
 <div align="center">
   <h1>Code Loader</h1>
   <p>
-    Boot your lobby code automatically, ensure the target chunks are loaded,<br>
-    and execute code stored as <code>block data</code> or <code>chest data</code>.<br>
-    The built-in <code>Storage Manager</code> provides an easy workflow for moving code into chest storage.<br>
-    The built-in <a href="https://github.com/delfineonx/interruption-framework"><code>Interruption Framework</code></a> can optionally provide interruption-safe event execution.
+    Extend and automatically execute your lobby code from <code>block data</code> or <code>chest data</code>.<br>
+    Flexible loader API helps manage boot safety during non-atomic setup and source execution.<br>
+    Includes built-in <code>Storage Manager</code> for moving source code into chest storage.<br>
+    Includes built-in <a href="https://github.com/delfineonx/interruption-framework"><code>Interruption Framework</code></a> for optional interruption-safety of managed event calls.
   </p>
   <p>
     <a href="#installation"><kbd>Installation</kbd></a> &nbsp;•&nbsp;
-    <a href="#quick-start"><kbd>Quick Start</kbd></a> &nbsp;•&nbsp;
+    <a href="#usage-specifics"><kbd>Usage Specifics</kbd></a> &nbsp;•&nbsp;
     <a href="#api-methods"><kbd>API Methods</kbd></a> &nbsp;•&nbsp;
     <a href="#configuration"><kbd>Configuration</kbd></a> &nbsp;•&nbsp;
     <a href="#storage-manager"><kbd>Storage Manager</kbd></a> &nbsp;•&nbsp;
-    <a href="#storage-format"><kbd>Storage Format</kbd></a> &nbsp;•&nbsp;
     <a href="#features"><kbd>Features</kbd></a> &nbsp;•&nbsp;
     <a href="#example"><kbd>Example</kbd></a> &nbsp;•&nbsp;
-    <a href="#troubleshooting"><kbd>Troubleshooting</kbd></a> &nbsp;•&nbsp;
-    <a href="#license-and-credits"><kbd>License & Credits</kbd></a>
+    <a href="#references"><kbd>References</kbd></a> &nbsp;•&nbsp;
+    <a href="#license"><kbd>License</kbd></a>
   </p>
 </div>
 
----
+<hr>
 
 <a id="installation"></a>
 <details open>
@@ -33,215 +32,339 @@
     </div>
   </summary>
 
-  <p>
-    Copy the loader source code into your real <code>World Code</code> in full.<br>
-  </p>
+  <p>Paste the loader source code into your real <code>World Code</code> in full.</p>
 
-  <h3>
-    <a href="./src/code_loader_minified.js">
-      <code><b>minified version</b></code>
-    </a>
-  </h3>
+  <h2>
+    <a href="./src/code_loader_minified.js"><code><b>minified</b></code></a>
+    &nbsp;OR&nbsp;
+    <a href="./src/code_loader_original.js"><code><b>original</b></code></a>
+  </h2>
 
-  <blockquote>
-    <p>
-      <code><b>! NOTE</b></code><br>
-      The loader boots automatically on world code init / lobby start.<br>
-      You may define additional <ins>non-event</ins> helpers and objects directly below the loader source.
-  </blockquote>
+  <p>The loader starts booting automatically on successful <code>world code init</code>.</p>
+
+  <div align="left">
+    <h3><code><b>! IMPORTANT !</b></code></h3>
+  </div>
+
+  <p>Directly below the loader, you may:</p>
+
+  <ul>
+    <li>define shared variables and helper functions, but <ins>do not assign</ins> event (Bloxd callback) handlers there; this is generally <ins>not recommended</ins>, especially with top-level <code>var</code> and <code>function</code> declarations, because they are hoisted and can end up in the loader's initial globals snapshot, so later boot-time globals cleanup will never be able to delete those</li>
+    <li>use <code>CL.onStart</code> for almost-immediate boot-time setup or preprocessing close to <code>world code init</code>; this <ins>may include</ins> assignments to event (Bloxd callback) handlers</li>
+  </ul>
+
+  <p>However, the intended workflow is still to keep actual game logic in source blocks or chest storage.</p>
 
 </details>
 
----
+<hr>
 
-<a id="quick-start"></a>
+<a id="usage-specifics"></a>
 <details open>
   <summary>
     <div align="center">
-      <h2>❮ <code><b>⚡ Quick Start ⚡</b></code> ❯</h2>
+      <h2>❮ <code><b>🧭 Usage Specifics 🧭</b></code> ❯</h2>
     </div>
   </summary>
 
   <div align="left">
-    <h3>〔 <code><b>Setup</b></code> 〕</h3>
+    <h3>〔 <code><b>Events</b></code> 〕</h3>
   </div>
-
-  <p>Inside your real <code>World Code</code>:</p>
-  <ul>
-    <li>add event names to <code>EVENTS</code></li>
-    <li>add code block positions to <code>BLOCKS</code></li>
-  </ul>
-
-```js
-// ---------- EXAMPLE ----------
-const configuration = {
-  EVENTS: [
-    // ...
-    "tick",
-    "playerCommand",
-    "onPlayerChat",
-    "onPlayerClick",
-    // ...
-  ],
-  BLOCKS: [
-    // ...
-    [27, 4, 14],
-    [27, 4, 12],
-    [27, 4, 10],
-    // ...
-  ],
-  // other fields remain unchanged
-};
-```
-
-  <p>
-    Split your world code across the listed blocks as needed. It has almost no difference in comparison to real <code>World Code</code>.<br>
-    Keep in mind that each block runs in its own scope (<a href="https://javascript.info/closure"><code>closure</code></a>).
-  </p>
 
   <div align="left">
-    <h3>〔 <code><b>Variables</b></code> 〕</h3>
+    <h4>⊂ <code><b>Handler Assignment</b></code> ⊃</h4>
   </div>
-
-  <p>If your "global" variables were previously declared with <code>const</code> or <code>let</code> in real <code>World Code</code>, switch to one of these patterns instead:</p>
-  <ul>
-    <li><code>globalThis.variableName = ...</code> <sub>(explicit, recommended)</sub></li>
-    <li><code>variableName = ...</code> <sub>(implicit)</sub></li>
-    <li><code>var variableName = ...</code> <sub>(implicit)</sub></li>
-  </ul>
-
-  <div align="left">
-    <h3>〔 <code><b>Event Handlers</b></code> 〕</h3>
-  </div>
-
-  <p>
-    Prefer assigning callback functions to globals (properties on <code>globalThis</code>).<br>
-    Avoid <ins>named function declarations</ins> for events, because they may not interact correctly with the loader's wiring of handlers.
-  </p>
 
   <ul>
     <li><code>✔️ eventName = (...args) =&gt; { ... };</code></li>
     <li><code>✔️ eventName = function (...args) { ... };</code></li>
+    <li><code>✔️ eventName = function optionalName(...args) { ... };</code></li>
     <li><code>❌ function eventName(...args) { ... }</code></li>
   </ul>
 
+  <p>At loader startup, wrapper functions for configured events (Bloxd callbacks) are created on <code>globalThis</code> under their event names, and the game captures their references on <code>world code init</code>. Later writes to the same global properties do not replace the originally captured wrappers themselves. Therefore, before the primary boot proceeds into the normal <code>_bootTick</code> flow, the loader redefines those properties as configurable accessors whose getter and setter work with internal handler references stored in closure state.</p>
+  <p>Because of that, the intended pattern is to <ins>assign</ins> a function to the existing global property. A global function declaration follows different declaration-binding semantics and may <ins>redefine the property itself</ins> instead of using the loader-managed setter.</p>
+
+  <div align="left">
+    <h4>⊂ <code><b>Single Active Handler</b></code> ⊃</h4>
+  </div>
+
+  <p>Each managed event keeps only one active handler reference. The most recent assignment replaces the previous one.</p>
+
+  <p>This keeps the runtime model simpler, reduces overhead, and makes reboot behavior easier to predict. Automatic handler merging can work in some designs, but it often makes game logic harder to reason about and harder to manage safely:</p>
+
+  <ul>
+    <li>return-value behavior can become ambiguous</li>
+    <li>hot-swap logic is harder to control correctly</li>
+    <li>interruption handling becomes more complex</li>
+    <li>merged paths may duplicate logic or API calls, wasting TU budget and increasing the chance of interruptions</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Manual Dispatching</b></code> ⊃</h4>
+  </div>
+
+  <p>If needed, you can build your own dispatcher inside the loader-managed event handler.</p>
+
 ```js
-// ---------- EXAMPLE ----------
-// ...
-tick = () => { }; // (27, 4, 14)
-onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => { }; // (27, 4, 12)
-playerCommand = function (playerId) => { }; // (27, 4, 10)
-onPlayerChat = function (playerId, chatMessage, channelName) { }; // (27, 4, 10)
-// ...
+if (globalThis.chatHooks == null) {
+  globalThis.chatHooks = [];
+}
+
+chatHooks.push((playerId, chatMessage, channelName) => {
+  // module A
+});
+
+chatHooks.push((playerId, chatMessage, channelName) => {
+  // module B
+});
+
+onPlayerChat = (playerId, chatMessage, channelName) => {
+  for (let i = 0; i < chatHooks.length; i++) {
+    const result = chatHooks[i](playerId, chatMessage, channelName);
+    if (result !== undefined) { return result; }
+  }
+};
 ```
+
+  <hr>
+
+  <div align="left">
+    <h3>〔 <code><b>Scopes, Closures, Globals</b></code> 〕</h3>
+  </div>
+
+  <p>Configured sources (multiple <code>"Code Blocks"</code>) are evaluated separately, not in one shared local scope.</p>
+
+  <ul>
+    <li><code>let</code> and <code>const</code> stay local to the source where they are declared</li>
+    <li>functions defined there can still access those values later through <a href="https://javascript.info/closure"><code>closures</code></a></li>
+    <li>other sources cannot access those locals directly</li>
+  </ul>
+
+  <p>If some state must be accessible from multiple sources, store it on the global object.</p>
+
+  <p>Recommended patterns for cross-source shared state:</p>
+
+  <ol>
+    <li><code>globalThis.name = ...</code> — clearest and most explicit</li>
+    <li><code>var name = ...</code> — global <a href="https://javascript.info/var">at top level</a>, but less explicit</li>
+    <li><code>name = ...</code> — also global, but least safe and easiest to create accidentally</li>
+  </ol>
+
+  <hr>
 
   <div align="left">
     <h3>〔 <code><b>Boot Safety</b></code> 〕</h3>
   </div>
 
   <div align="left">
-    <h4>⊂ <code>Loader boot is not atomic</code> ⊃</h4>
+    <h4>⊂ <code><b>Boot Is Not Atomic</b></code> ⊃</h4>
   </div>
 
-  <p>
-    While <code>CL.isRunning</code> is <code>true</code>, the loader may still be resetting globals and handlers,
-    executing blocks, and processing queued <code>onPlayerJoin</code> calls.
-    During that phase, callbacks can still fire even though your runtime state is only partially initialized.
-    In practice, some values, caches, or helper functions may not exist yet, and direct access can cause errors.
-  </p>
+  <p>Boot unfolds across multiple ticks. During that time the loader may run its lifecycle callbacks, process join and leave events, reset handlers and globals, execute configured sources, and perform other steps before the environment becomes fully stable.</p>
 
-  <p>
-    The most common cases are callbacks that can fire naturally on their own frequently, such as <code>tick</code> or <code>onBlockStand</code>.
-    Those should usually stay inactive until boot is fully finished.
-  </p>
+  <p>Therefore, events can still fire while the game setup is incomplete. Some globals, helpers, or handlers may still be undefined during parts of the boot session, which can lead to bugs or hard failures.</p>
 
   <div align="left">
-    <h4>⊂ <code><b>Solution A</b></code> ⊃</h4>
+    <h4>⊂ <code><b>CL.stage Overview</b></code> ⊃</h4>
   </div>
 
-  <p>Guard callbacks and return early while the loader is still booting.</p>
+  <ul>
+    <li><code> 0 </code> — idle; no boot is running</li>
+    <li><code>&gt; 0</code> — a boot session is active</li></li>
+    <li><code>&lt; 0</code> — startup-only one-time stages before the primary boot begins</li>
+  </ul>
+
+  <p>In practice, treat any <code>CL.stage &gt; 0</code> as an active boot session.</p>
+
+  <div align="left">
+    <h4>⊂ <code><b>General Guard Pattern</b></code> ⊃</h4>
+  </div>
+
+  <p>To prevent errors and bugs in event logic that is intended to run during normal and stable gameplay, return early while boot is active:</p>
 
 ```js
-// do NOT use this pattern for onPlayerJoin
-
 tick = () => {
-  if (CL.isRunning) { return; }
-  // your tick logic...
+  if (CL.stage > 0) { return; }
+  // your logic...
 };
 
 onBlockStand = (...) => {
-  if (CL.isRunning) { return; }
-  // your onBlockStand logic...
+  if (CL.stage !== 0) { return; }
+  // your logic...
+};
+
+onClientOptionUpdated = (...) => {
+  if (CL.stage) { return; }
+  // your logic...
 };
 ```
 
+  <p>This is especially useful for naturally frequent events such as <code>tick</code>, <code>onBlockStand</code>, <code>onChunkLoaded</code>, <code>onInventoryUpdated</code>, and similar ones that are not meant to participate in boot.</p>
+
+  <blockquote>
+    <h4><code><b>! NOTE</b></code></h4>
+    <p>Do not apply this generic early-return pattern to <code>onPlayerJoin</code> or <code>onPlayerLeave</code>. It may interfere with dedicated boot-time handling or suppress calls that may occur after the environment state has already become stable.</p>
+  </blockquote>
+
+  <hr>
+
   <div align="left">
-    <h4>⊂ <code><b>Solution B</b></code> ⊃</h4>
+    <h3>〔 <code><b>onPlayerJoin</b></code> 〕</h3>
   </div>
 
-  <p>
-    Handle <code>onPlayerJoin</code> differently.
-    Do not skip it with <code>if (CL.isRunning) { return; }</code>.
-    Join calls are internally queued and processed during boot, so discarding them can break expected initialization.
-  </p>
+  <div align="left">
+    <h4>⊂ <code><b>Join Safety Guard</b></code> ⊃</h4>
+  </div>
 
-  <p>
-    Instead, validate the player first.
-    A queued join may be processed slightly later, and by that time the player may already be gone.
-    Because of that, <code>api.checkValid(playerId)</code> should be treated as a required safety check.
-  </p>
+  <p>Boot is not atomic, and queued joins may run later than the original game event call. By that time, the player may already have left, which can break normal join logic.</p>
 
 ```js
 onPlayerJoin = (playerId, fromGameReset) => {
   if (!api.checkValid(playerId)) { return; }
-  // your onPlayerJoin logic...
+  // your join logic...
 };
 ```
 
-  <p>
-    This rule still applies even when <code>JM.players_to_skip</code> is used.
-    That option only affects the <ins>initial scan of players who are already online</ins> at the start of the boot.
-    It does not suppress real joins that happen later during the same boot session.
-  </p>
+  <p>Do not use the general boot guard here. The loader replays queued joins at stage <code>14</code>, and <code>CL.stage</code> early return can suppress your actual join logic there.</p>
 
   <div align="left">
-    <h4>⊂ <code><b>Solution C</b></code> ⊃</h4>
+    <h4>⊂ <code><b>CL.bootJoinStatus</b></code> ⊃</h4>
   </div>
 
-  <p>
-    Remember that a reboot may clear user-created global variables <ins>before</ins> the new blocks execute.
-    That behavior is controlled by <code>OM.globals_to_keep</code>.
-  </p>
+  <p>When <code>onPlayerJoin</code> is active, the loader exposes this temporary map during boot. See <a href="#api-methods"><code><b>API Methods</b></code></a> for details.</p>
 
-  <p>
-    Use <code>[]</code> to clear all user-created globals, a list of names to preserve only selected ones,
-    or <code>null</code> to keep all of them across reboots.
-  </p>
+  <ul>
+    <li>At stage <code>2</code>, the loader creates the queue and <code>CL.bootJoinStatus</code>, then installs the temporary queueing interceptor</li>
+    <li>At stage <code>10</code>, already-online players are scanned and inserted into the queue with <code>fromGameReset = false</code></li>
+    <li>Players covered by the effective mark-as-joined list are set to <code>2</code> and skipped during queued-join replay; others remain at <code>1</code> and are processed later</li>
+    <li>If a player joins or rejoins before queued-join replay finishes, their status is set or reset to <code>1</code> and they can still be processed during stage <code>14</code></li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Queued Join Control</b></code> ⊃</h4>
+  </div>
+
+  <p><code>CL.onLoad</code> runs right before queued joins are replayed, so join status of specific players can be changed here for the current boot.</p>
 
 ```js
-CL.config.OM.globals_to_keep = ["myCache", "myQueue"];
-// or keep all your globals on reboot:
-// CL.config.OM.globals_to_keep = null;
+CL.onLoad = (context) => {
+  // ...
+  const playerIdsList = Object.keys(CL.bootJoinStatus);
+  for (let i = 0, playerId = playerIdsList[i]; i < playerIdsList.length; playerId = playerIdsList[++i]) {
+    if (shouldSkipThisBoot(playerId)) {
+      CL.bootJoinStatus[playerId] = 2;
+    }
+  }
+  // ...
+  return true;
+};
+```
+
+  <hr>
+  <div align="left">
+    <h3>〔 <code><b>onPlayerLeave</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Leave Safety Guard</b></code> ⊃</h4>
+  </div>
+
+  <p>Leave handling is intentionally different from join handling. The loader does not replay leave calls later. Instead, during boot it records leave metadata and immediately forwards the call to your current event handler.</p>
+
+  <p>The main risk usually appears when a player was already online before the boot and some state related to that player has not yet been cleared. If that player leaves before the environment becomes stable, later boot-time changes, including handler resets, can lead to inconsistent game logic. The safest default is to ignore that boot-time leave window.</p>
+
+```js
+onPlayerLeave = (playerId, serverIsShuttingDown) => {
+  if (CL.stage > 1 && CL.stage < 16) { return; }
+  // your leave logic...
+};
+```
+
+  <p>This range matches the unstable part of the boot, so normal leave handling stays disabled until the final event handler is restored.</p>
+
+  <div align="left">
+    <h4>⊂ <code><b><code>CL.bootLeaveRecords</code></b></code> ⊃</h4>
+  </div>
+
+  <p>When <code>onPlayerLeave</code> is active, the loader exposes this temporary record array during boot. See <a href="#api-methods"><code><b>API Methods</b></code></a> for details.</p>
+
+  <ul>
+    <li>At stage <code>3</code>, the loader creates <code>CL.bootLeaveRecords</code>, stores the current leave handler, and installs the temporary recording interceptor</li>
+    <li>At stage <code>15</code>, that stored handler, or the newer one assigned by source execution, becomes the final active <code>onPlayerLeave</code></li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Leave State Finalization</b></code> ⊃</h4>
+  </div>
+
+  <p><code>CL.onEnd</code> runs after all queued joins are processed and the final leave handler has already been restored, so it is the right place to finalize player leave-related state.</p>
+
+```js
+CL.onEnd = (context) => {
+  // ...
+  const leaveRecords = CL.bootLeaveRecords;
+  for (let i = 0; i < leaveRecords.length; ++i) {
+    const [playerId, bootStage, joinStatus] = leaveRecords[i];
+    // inspect or reconcile here
+  }
+  // ...
+  return true;
+};
+```
+
+  <blockquote>
+    <h4><code><b>! NOTE</b></code></h4>
+    <p>In partial reboot setups, it can be better to finalize player leave-related state inside <code>CL.onStart</code>, so leftover data from the previous environment does not interfere with the new boot.</p>
+  </blockquote>
+
+  <hr>
+
+  <div align="left">
+    <h3>〔 <code><b>Eval Guards</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Loader-only Execution</b></code> ⊃</h4>
+  </div>
+
+  <p>Use this guard for code that should run only when the loader evaluates the source, not when a player manually triggers the same block.</p>
+
+```js
+if (myId == null) {
+  // runs only during loader-triggered evaluation
+}
 ```
 
   <div align="left">
-    <h3>〔 <code><b>Guard Pattern</b></code> 〕</h3>
+    <h4>⊂ <code><b>One-time Global Initialization</b></code> ⊃</h4>
   </div>
 
-  <p>
-    If you want to prevent manual execution when a player clicks a code block,
-    wrap the contents with <code>myId === null</code> check. This ensures it runs only during the loader-managed boot process.
-  </p>
+  <p>Use this guard for shared globals that should be created only once.</p>
 
 ```js
-if (myId === null) {
-  // runs only during the loader boot (not on player click)
+if (globalThis.propertyName == null) {
+  globalThis.propertyName = (...);
+  // ...
+}
+```
+
+  <div align="left">
+    <h4>⊂ <code><b>Combined Pattern</b></code> ⊃</h4>
+  </div>
+
+```js
+if (myId == null) {
+  if (globalThis.propertyName == null) {
+    globalThis.propertyName = (...);
+    // ...
+  }
 }
 ```
 
 </details>
 
----
+<hr>
 
 <a id="api-methods"></a>
 <details open>
@@ -259,166 +382,345 @@ if (myId === null) {
 
 ```js
 /**
- * Accessor of `Storage Manager` object (frozen).
+ * Optional Storage Manager object.
+ *
+ * Notes:
+ * - Exposed only if `config.enable_storage_manager` was `true` during loader startup.
+ *
+ * @type {object | undefined}
  */
 SM
 ```
+
 ```js
 /**
- * Accessor of `configuration` object (sealed).
- * You may mutate existing values by keys and then call `CL.reboot()`,
- * but you cannot add or delete properties.
+ * Live boot configuration object.
+ *
+ * Notes:
+ * - Modify this property before `CL.reboot()` or inside `CL.onStart`.
+ * - Some properties are startup-only and are not re-applied during later boot sessions.
+ *
+ * @type {object}
  */
 config
 ```
+
 ```js
 /**
- * `true` only during the boot session that runs right after world init.
- * `false` after primary boot is finished.
- * 
+ * Whether the current boot session is the primary one.
+ *
+ * Notes:
+ * - `true` only during the first boot that starts after loader startup (`world code init`).
+ * - `false` once that boot completes, and remains so for all later boot sessions.
+ *
  * @type {boolean}
  */
 isPrimaryBoot
 ```
+
 ```js
 /**
- * `true` while a boot session is currently running.
- * `false` after the boot is finished.
- * 
- * Notes:
- * - It can be useful to resolve conflicts,
- *   when actions in callbacks depend on not initialized states yet during boot.
- * 
- * @type {boolean}
- */
-isRunning
-```
-```js
-/**
- * Progress cursor of the current or last boot session.
+ * Current loader stage.
  *
  * Notes:
- * - Updated while boot is running to indicate how far execution has advanced.
- * - Block mode: current index in `CL.config.BLOCKS`.
- * - Chest mode: number of processed storage partitions
- *   (i.e. index in the `blockList` passed to `CL.SM.build(...)`).
- * 
+ * - `0`   = idle / no boot is running.
+ * - `> 0` = a boot session is active.
+ * - `< 0` = startup-only one-time stages before the primary boot begins.
+ * - See `References` for details.
+ *
+ * @type {number}
+ */
+stage
+```
+
+```js
+/**
+ * Progress cursor of the current or most recent boot session.
+ *
+ * Block mode:
+ * - Execution index of entries in `CL.config.sources`.
+ *
+ * Storage mode:
+ * - Execution index of storage partitions derived from built containers.
+ * - Usually matches the original index of entries in `sourceBlockList` used to build storage,
+ *   but may continue through up to 3 trailing empty partitions in the last partially filled container.
+ *
  * @type {number}
  */
 cursor
 ```
+
 ```js
 /**
- * Start a new boot session using the current configuration.
- * 
+ * Unix timestamp in milliseconds, captured with `Date.now()` when the current
+ * or most recent boot session started.
+ *
+ * @type {number}
+ */
+startTime
+```
+
+```js
+/**
+ * Unix timestamp in milliseconds, captured with `Date.now()` when the current
+ * or most recent boot session ended.
+ *
  * Notes:
- * - Broadcasts warning if a boot session is already running.
- * 
+ * - Remains `0` until the primary boot completes.
+ *
+ * @type {number}
+ */
+endTime
+```
+
+```js
+/**
+ * Callback called before the configuration for the current boot is captured.
+ *
+ * Typical uses:
+ * - Prepare environment state and data before the main boot process begins.
+ * - Modify `CL.config`.
+ *
+ * Notes:
+ * - Receives a mutable temporary context object.
+ * - Return `true` to move to the next boot stage (2 / 3 / 4).
+ * - Return `false` to stay on the current boot stage (1); the callback will be called again next tick.
+ * - Any other return value is coerced to `boolean` with normal truthy / falsy rules.
+ * - If the callback throws, the error is recorded and the boot proceeds.
+ * - The property is reset to the default pass-through callback at the end of the boot.
+ *
+ * @type {(context: object) => boolean}
+ */
+onStart
+```
+
+```js
+/**
+ * Callback called after source execution is complete and before queued joins are processed.
+ *
+ * Typical uses:
+ * - Modify pre-join environment state and data.
+ * - Mutate `CL.bootJoinStatus`.
+ * - Inspect `CL.bootLeaveRecords`.
+ *
+ * Notes:
+ * - Receives a mutable temporary context object.
+ * - Return `true` to move to the next boot stage (14 / 15 / 16).
+ * - Return `false` to stay on the current boot stage (13); the callback will be called again next tick.
+ * - Any other return value is coerced to `boolean` with normal truthy / falsy rules.
+ * - If the callback throws, the error is recorded and the boot proceeds.
+ * - The property is reset to the default pass-through callback at the end of the boot.
+ *
+ * @type {(context: object) => boolean}
+ */
+onLoad
+```
+
+```js
+/**
+ * Callback called after join and leave handling is complete and before the end of the current boot.
+ *
+ * Typical uses:
+ * - Finish game setup and finalize environment state.
+ * - Inspect `CL.bootLeaveRecords` and `CL.bootJoinStatus`.
+ * - Perform loader-side memory cleanup.
+ *
+ * Notes:
+ * - Receives a mutable temporary context object.
+ * - Return `true` to move to the next boot stage (17).
+ * - Return `false` to stay on the current boot stage (16); the callback will be called again next tick.
+ * - Any other return value is coerced to `boolean` with normal truthy / falsy rules.
+ * - If the callback throws, the error is recorded and the boot proceeds.
+ * - The property is reset to the default pass-through callback at the end of the boot.
+ *
+ * @type {(context: object) => boolean}
+ */
+onEnd
+```
+
+```js
+/**
+ * Boot-time join status map.
+ *
+ * Values:
+ * - `1` = queued for processing
+ * - `2` = already processed or intentionally marked as joined
+ *
+ * Notes:
+ * - Exists only when `onPlayerJoin` event is active.
+ * - Available only during boot; reset to `null` at the end.
+ * - May be inspected or mutated inside loader callbacks.
+ *
+ * @type {Object<PlayerId, 1 | 2> | null}
+ */
+bootJoinStatus
+```
+
+```js
+/**
+ * Boot-time leave records.
+ *
+ * Entry format:
+ * - `[playerId, bootStage, joinStatus]`
+ *
+ * Join status values:
+ * - `0` = no boot join status existed for that player
+ * - `1` = the player was queued but not processed by that time
+ * - `2` = already processed or marked as joined
+ *
+ * Notes:
+ * - Exists only when `onPlayerLeave` event is active.
+ * - Available only during boot; reset to `null` at the end.
+ * - May be inspected or mutated inside loader callbacks.
+ *
+ * @type {Array<[PlayerId, number, 0 | 1 | 2]> | null}
+ */
+bootLeaveRecords
+```
+
+```js
+/**
+ * Start a new boot session.
+ *
+ * Notes:
+ * - Works only when `CL.stage === 0`.
+ * - If a boot is already in progress, no boot state is changed and a warning is broadcast.
+ *
  * @returns {void}
  */
 reboot()
 ```
+
 ```js
 /**
- * Broadcast the load time and, optionally, the error count of the last boot.
- * 
+ * Broadcast boot duration and, optionally, the total error count.
+ *
+ * Notes:
+ * - Uses live internal metadata during boot.
+ * - Falls back to retained last-boot data after the boot completes.
+ *
  * @param {boolean} [showErrorCount = true]
  * @returns {void}
  */
 logBootStatus(showErrorCount)
 ```
+
 ```js
 /**
- * Broadcast collected execution (evaluation) errors from the last boot.
- * 
- * @param {boolean} [showSuccess = true]
+ * Broadcast detailed errors of the current or most recent boot.
+ *
+ * Includes:
+ * - `onStart` error
+ * - `onLoad` error
+ * - `onEnd` error
+ * - code execution errors
+ *
+ * Notes:
+ * - Uses live internal metadata during boot.
+ * - Falls back to retained last-boot data after the boot completes.
+ *
+ * @param {boolean} [showSuccessMessage = true]
  * @returns {void}
  */
-logErrors(showSuccess)
+logErrorDetails(showSuccessMessage)
 ```
+
 ```js
 /**
- * Broadcast which blocks or storage were executed.
- * 
+ * Broadcast execution details of the current or most recent boot.
+ *
+ * Block mode:
+ * - Lists executed source blocks with their coordinates and detected names.
+ *
+ * Storage mode:
+ * - Reports execution from the configured storage registry.
+ *
+ * Notes:
+ * - Uses live internal metadata during boot.
+ * - Falls back to retained last-boot data after the boot completes.
+ *
  * @returns {void}
  */
-logExecutionInfo()
+logExecutionDetails()
 ```
+
 ```js
 /**
- * Broadcast summary of the last boot:
- * boot status + errors + execution info.
- * 
+ * Broadcast a combined boot report.
+ *
  * @param {boolean} [showBootStatus = true]
- * @param {boolean} [showErrors = true]
- * @param {boolean} [showExecutionInfo = false]
+ * @param {boolean} [showErrorDetails = true]
+ * @param {boolean} [showExecutionDetails = false]
  * @returns {void}
  */
-logReport(showBootStatus, showErrors, showExecutionInfo)
+logReport(showBootStatus, showErrorDetails, showExecutionDetails)
 ```
 
-  <div align="left">
-    <h3>〔 <code><b>Storage Manager</b></code> 〕</h3>
-  </div>
+```js
+/**
+ * Styled broadcast logger used internally.
+ *
+ * Notes:
+ * - Messages longer than `950` characters are split into safe segments.
+ * - Splitting prefers newline boundaries; otherwise a fixed segment length is used.
+ *
+ * @param {string} message
+ * @param {0 | 1 | 2 | 3 | 4} type
+ * @returns {void}
+ */
+_log(message, type)
+```
 
-  <p><code>globalThis.CL.SM</code> / <code>CL.SM</code> exposes:</p>
+```js
+/**
+ * Reusable StyledText templates used by `CL._log`.
+ *
+ * Type index mapping:
+ * - `0` = error
+ * - `1` = warning
+ * - `2` = success
+ * - `3` = info
+ * - `4` = bug / debug
+ *
+ * @type {Array<StyledText>}
+ */
+_log.payloads
+```
 
 ```js
 /**
- * Create a registry unit (chest-like container) and store the region bounds in slot 0.
- * 
- * Notes:
- * - Task is queued to tick internally.
- * 
- * @param {[number, number, number]} lowPosition - bottom left corner [x,y,z]
- * @param {[number, number, number]} highPosition - top right corner [x,y,z]
- * @returns {void}
+ * Retained boot error data used by report helpers after boot completion.
+ *
+ * Format:
+ * - `[onStartName, onStartMessage, onLoadName, onLoadMessage, onEndName, onEndMessage, executionErrorEntry, ...]`
+ *
+ * Execution error entry format:
+ * - Block mode: `[name, message, x, y, z]`
+ * - Storage mode: `[name, message, x, y, z, containerUnitIndex, containerPartitionIndex]`
+ *
+ * @type {Array<string | [string, string, number, number, number, number?, number?] | null> | null}
  */
-create(lowPosition, highPosition)
+_bootErrors
 ```
+
 ```js
 /**
- * Broadcast info from an existing registry unit.
- * 
+ * Retained boot source data used by report helpers after boot completion.
+ *
+ * Format:
+ * - `[[x, y, z, detectedBlockName?], ...]`
+ *
  * Notes:
- * - Task is queued to tick internally.
- * 
- * @param {[number, number, number]} registryPosition
- * @returns {void}
+ * - Holds a direct reference to `CL.config.sources`; it is not a copy.
+ *
+ * @type {Array<[number, number, number, string?]> | null}
  */
-check(registryPosition)
-```
-```js
-/**
- * Convert code stored in blocks into chest storage inside the registered region.
- * 
- * Notes:
- * - Task is queued to tick internally.
- * 
- * @param {[number, number, number]} registryPosition
- * @param {Array<[number, number, number]>} blockList
- * @param {number} [maxStorageUnitsPerTick = 8]
- * @returns {void}
- */
-build(registryPosition, blockList, maxStorageUnitsPerTick)
-```
-```js
-/**
- * Remove all storage units and registry entries while keeping the registry unit.
- * 
- * Notes:
- * - Task is queued to tick internally.
- * 
- * @param {[number, number, number]} registryPosition
- * @param {number} [maxStorageUnitsPerTick = 32]
- * @returns {void}
- */
-dispose(registryPosition, maxStorageUnitsPerTick)
+_bootSources
 ```
 
 </details>
 
----
+<hr>
 
 <a id="configuration"></a>
 <details open>
@@ -428,293 +730,293 @@ dispose(registryPosition, maxStorageUnitsPerTick)
     </div>
   </summary>
 
-  <blockquote>
-    <h4><code><b>! INFO</b></code></h4>
-      <ul>
-        <li>The main config object (<code>configuration</code>) is <ins>sealed</ins> on world code init.</li>
-        <li><code>OM</code>, <code>BM</code>, <code>JM</code> are <ins>sealed</ins>.</li>
-        <li><code>STYLES</code> is <ins>frozen</ins>.</li>
-        <li>You can change existing values by key and then call <code>CL.reboot()</code>.</li>
-        <li>You cannot add or remove properties, which helps prevent accidental shape changes.</li>
-      </ul>
-  </blockquote>
+  <div align="left">
+    <h3>〔 <code><b>Shape</b></code> 〕</h3>
+  </div>
 
 ```js
-const configuration = {
-  EVENTS: [ ... ],
-  BLOCKS: [ ... ],
-  OM: { ... }, // boot manager
-  BM: { ... }, // block manager
-  JM: { ... }, // join manager
-  STYLES: [ ... ],
+let config = {
+  events: [ ... ],
+  sources: [ ... ],
+
+  show_boot_status: true,
+  show_error_details: true,
+  show_execution_details: false,
+
+  use_storage_mode: false,
+  execution_budget_per_tick: 8,
+  join_budget_per_tick: 8,
+
+  players_to_mark_as_joined: [],
+  handlers_to_preserve: null,
+  globals_to_preserve: null,
+
+  enable_storage_manager: false,
+  shutdown_on_startup_error: true,
 };
 ```
 
-  <blockquote>
-    <h4><code><b>! IMPORTANT</b></code></h4>
-    Do not remove configuration properties (or, in some cases, their values) from real <code>World Code</code> unless this documentation allows it.
-  </blockquote>
-
   <div align="left">
-    <h3>〔 <code><b>EVENTS</b></code> 〕</h3>
-  </div>
-  
-  <blockquote>
-    <h4><code><b>! INFO</b></code></h4>
-      <ul>
-        <li>
-          This array defines which in-game callbacks the loader will wire and manage.
-        </li>
-        <li>
-          <code>eventName</code> must be a valid Bloxd callback name.
-        </li>
-        <li>
-          <code>captureInterrupts</code> is converted to boolean (<code>!!value</code>).
-          Use <code>1</code>/<code>0</code> (or <code>true</code>/<code>false</code>) for clarity.
-        </li>
-        <li>
-          <code>fallbackValue</code> can be any value and is applied through <code>api.setCallbackValueFallback(eventName, fallbackValue)</code> once during primary boot.
-          When <code>fallbackValue</code> is <code>undefined</code>, the loader skips fallback setup for that event.
-        </li>
-      </ul>
-  </blockquote>
-  
-  <div align="left">
-    <h4>⊂ <code><b>Supported entries</b></code> ⊃</h4>
-  </div>
-  
-  <ul>
-    <li>
-      <code>"eventName"</code>
-      <ul>
-        <li><code>captureInterrupts</code> defaults to <code>false</code></li>
-        <li><code>fallbackValue</code> defaults to <code>undefined</code></li>
-      </ul>
-    </li>
-    <li>
-      <code>[eventName, captureInterrupts?, fallbackValue?]</code>
-      <ul>
-        <li><code>captureInterrupts</code> — boolean-ish value (default: <code>false</code>)</li>
-        <li><code>fallbackValue</code> — any value (default: <code>undefined</code>)</li>
-      </ul>
-    </li>
-  </ul>
-  
-  <blockquote>
-    <h4><code><b>! IMPORTANT</b></code></h4>
-      <ul>
-        <li>
-          If you enable <code>captureInterrupts</code> for any event,
-          you must call <code>IF.tick()</code> inside your <code>tick</code> callback
-          (see <a href="#features">Interruption Handling</a>).
-        </li>
-        <li>
-          Without <code>IF.tick()</code>, queued retry work will never be processed (and might later internally overflow memory).
-        </li>
-      </ul>
-  </blockquote>
-  
-  <blockquote>
-    <h4><code><b>! NOTE</b></code></h4>
-      <ul>
-        <li>
-          <code>tick</code> is special and is ignored by the event-wrapper builder.
-          You may still keep <code>"tick"</code> in the list for readability.
-        </li>
-        <li>
-          Event wrappers are created from the initial <code>EVENTS</code> list on world code init.
-          Changing <code>EVENTS</code> later at runtime through <code>CL.config.EVENTS</code> will not rebuild wrappers.
-        </li>
-      </ul>
-  </blockquote>
-
-  <div align="left">
-    <h3>〔 <code><b>BLOCKS</b></code> 〕</h3>
-  </div>
-
-  <blockquote>
-    <h4><code><b>! INFO</b></code></h4>
-      <ul>
-        <li>List of block positions that store your code.</li>
-        <li>Each entry is <code>[x, y, z]</code> (numbers are floored).</li>
-        <li>Invalid entries are ignored.</li>
-      </ul>
-  </blockquote>
-
-  <div align="left">
-    <h4>⊂ <code><b>Storage type</b></code> ⊃</h4>
-  </div>
-
-  <ul>
-    <li>
-      <code><b>block data</b></code>
-      <ul>
-        <li><code>BM.is_chest_mode = false</code></li>
-        <li>execution order = order of entries in <code>BLOCKS</code></li>
-      </ul>
-    </li>
-    <li>
-      <code><b>chest data</b></code>
-      <ul>
-        <li><code>BM.is_chest_mode = true</code></li>
-        <li><code>BLOCKS</code> should contain only one entry: <code>[registryX, registryY, registryZ]</code></li>
-        <li>execution order = storage order inside the registry (see <a href="#storage-format">Storage Format</a>)</li>
-      </ul>
-    </li>
-  </ul>
-
-  <div align="left">
-    <h3>〔 <code><b>OM (boot manager)</b></code> 〕</h3>
+    <h3>〔 <code><b>Reference Table</b></code> 〕</h3>
   </div>
 
   <table>
     <thead>
       <tr>
-        <th>Property</th>
-        <th align="right">Type</th>
-        <th align="right">Default</th>
-        <th>Description</th>
+        <th><code>Property</code></th>
+        <th><code>Type</code></th>
+        <th><code>Default</code></th>
+        <th><code>When Used</code></th>
+        <th><code>Description</code></th>
       </tr>
     </thead>
     <tbody>
+      <tr>
+        <td><code>events</code></td>
+        <td><code>Array</code></td>
+        <td><code>[]</code></td>
+        <td>startup-only</td>
+        <td>List of Bloxd callbacks used at startup to build loader-managed wrappers and internal event bindings.</td>
+      </tr>
+      <tr>
+        <td><code>sources</code></td>
+        <td><code>Array</code></td>
+        <td><code>[]</code></td>
+        <td>each boot</td>
+        <td>Execution source positions. In block mode, entries refer to source blocks. In storage mode, only <code>sources[0]</code> is used and it must point to the storage registry.</td>
+      </tr>
       <tr>
         <td><code>show_boot_status</code></td>
-        <td align="right">Boolean</td>
-        <td align="right"><code>true</code></td>
-        <td>Whether to broadcast the total code load duration after boot finishes.</td>
+        <td><code>boolean</code></td>
+        <td><code>true</code></td>
+        <td>each boot</td>
+        <td>Whether the end-of-boot report includes boot status and duration.</td>
       </tr>
       <tr>
-        <td><code>show_errors</code></td>
-        <td align="right">Boolean</td>
-        <td align="right"><code>true</code></td>
-        <td>Whether to broadcast collected execution (evaluation) errors and their count after boot.</td>
+        <td><code>show_error_details</code></td>
+        <td><code>boolean</code></td>
+        <td><code>true</code></td>
+        <td>each boot</td>
+        <td>Whether the end-of-boot report includes boot lifecycle callback errors and source execution errors.</td>
       </tr>
       <tr>
-        <td><code>show_execution_info</code></td>
-        <td align="right">Boolean</td>
-        <td align="right"><code>false</code></td>
-        <td>Whether to broadcast execution details after boot: either block positions and names or the storage position used in chest mode.</td>
+        <td><code>show_execution_details</code></td>
+        <td><code>boolean</code></td>
+        <td><code>false</code></td>
+        <td>each boot</td>
+        <td>Whether the end-of-boot report includes source execution details.</td>
       </tr>
       <tr>
-        <td><code>globals_to_keep</code></td>
-        <td align="right"><code>null | Array&lt;string&gt;</code></td>
-        <td align="right"><code>[]</code></td>
-        <td>Controls which user-created global variables are preserved during <code>CL.reboot()</code> cleanup.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <blockquote>
-    <h4><code><b>! NOTE (globals_to_keep)</b></code></h4>
-    <ul>
-      <li>Applied only on <ins>reboots</ins>, not during the primary boot.</li>
-      <li><code>null</code> — preserve <ins>all</ins> user-created globals (skip cleanup).</li>
-      <li><code>[]</code> — preserve <ins>none</ins> of user-created globals.</li>
-      <li><code>[propertyName, ...]</code> — preserve only the listed user-created globals.</li>
-      <li>Loader and initial globals are preserved automatically.</li>
-    </ul>
-  </blockquote>
-
-  <div align="left">
-    <h3>〔 <code><b>BM (block manager)</b></code> 〕</h3>
-  </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Property</th>
-        <th align="right">Type</th>
-        <th align="right">Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>is_chest_mode</code></td>
-        <td align="right">Boolean</td>
-        <td align="right"><code>false</code></td>
-        <td>Whether to read and execute from chest storage instead of block data.</td>
+        <td><code>use_storage_mode</code></td>
+        <td><code>boolean</code></td>
+        <td><code>false</code></td>
+        <td>each boot</td>
+        <td>Selects the source mode for the current boot: <code>false</code> = direct block-data execution, <code>true</code> = storage execution through the registry.</td>
       </tr>
       <tr>
         <td><code>execution_budget_per_tick</code></td>
-        <td align="right">Number</td>
-        <td align="right"><code>8</code></td>
-        <td>Maximum number of blocks (or storage partitions) executed per tick during boot. Minimum <code>1</code>. Integer-floored.</td>
+        <td><code>number</code></td>
+        <td><code>8</code></td>
+        <td>each boot<br><br>when <code>sources.length &gt; 0</code></td>
+        <td>Maximum source execution steps per tick. In block mode, one step = one source block. In storage mode, one step = one storage partition. Clamped to at least <code>1</code>.</td>
       </tr>
       <tr>
-        <td><code>max_error_count</code></td>
-        <td align="right">Number</td>
-        <td align="right"><code>32</code></td>
-        <td>Maximum number of collected errors to retain. Minimum <code>0</code>. Integer-floored.</td>
+        <td><code>join_budget_per_tick</code></td>
+        <td><code>number</code></td>
+        <td><code>8</code></td>
+        <td>each boot<br><br>when <code>onPlayerJoin</code> is active</td>
+        <td>Maximum queued joins handled per tick once source execution is complete. Clamped to at least <code>1</code>.</td>
+      </tr>
+      <tr>
+        <td><code>players_to_mark_as_joined</code></td>
+        <td><code>Array&lt;PlayerId&gt; | null</code></td>
+        <td><code>[]</code></td>
+        <td>each boot<br><br>when <code>onPlayerJoin</code> is active</td>
+        <td>Controls which already-online players are treated as joined by preassigning them boot join status <code>2</code>.</td>
+      </tr>
+      <tr>
+        <td><code>handlers_to_preserve</code></td>
+        <td><code>Array&lt;string&gt; | null</code></td>
+        <td><code>null</code></td>
+        <td>each boot</td>
+        <td>Controls which loader-managed event handlers are not reset before source execution.</td>
+      </tr>
+      <tr>
+        <td><code>globals_to_preserve</code></td>
+        <td><code>Array&lt;string&gt; | null</code></td>
+        <td><code>null</code></td>
+        <td>each boot</td>
+        <td>Controls which user-created globals are not deleted before source execution.</td>
+      </tr>
+      <tr>
+        <td><code>enable_storage_manager</code></td>
+        <td><code>boolean</code></td>
+        <td><code>false</code></td>
+        <td>startup-only</td>
+        <td>Whether the loader <code>Storage Manager</code> (<code>CL.SM</code>) is exposed and its internal tick worker is installed.</td>
+      </tr>
+      <tr>
+        <td><code>shutdown_on_startup_error</code></td>
+        <td><code>boolean</code></td>
+        <td><code>true</code></td>
+        <td>startup-only</td>
+        <td>Whether players are kicked on loader startup failure. If disabled, the error is still broadcast, but no shutdown tick is installed and loader setup remains incomplete.</td>
       </tr>
     </tbody>
   </table>
 
   <div align="left">
-    <h3>〔 <code><b>JM (join manager)</b></code> 〕</h3>
+    <h3>〔 <code><b>events</b></code> 〕</h3>
   </div>
-
-  <table>
-    <thead>
-      <tr>
-        <th>Property</th>
-        <th align="right">Type</th>
-        <th align="right">Default</th>
-        <th>Description</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><code>players_to_skip</code></td>
-        <td align="right"><code>null | Array&lt;PlayerId&gt;</code></td>
-        <td align="right"><code>[]</code></td>
-        <td>Controls which currently online players should not have the join logic re-applied to them during boot.</td>
-      </tr>
-      <tr>
-        <td><code>dequeue_budget_per_tick</code></td>
-        <td align="right">Number</td>
-        <td align="right"><code>8</code></td>
-        <td>Maximum number of queued players processed per tick during boot. Minimum <code>1</code>. Integer-floored.</td>
-      </tr>
-    </tbody>
-  </table>
-
-  <blockquote>
-    <h4><code><b>! NOTE (players_to_skip)</b></code></h4>
-    <ul>
-      <li>Applies only if <code>onPlayerJoin</code> is included in <code>EVENTS</code>.</li>
-      <li>The scan runs on both <ins>primary boot</ins> and <ins>reboots</ins>.</li>
-      <li>It affects only players who are already online when the scan runs. New joins that happen later during boot are queued normally.</li>
-      <li><code>null</code> — skip <ins>all</ins> currently online players.</li>
-      <li><code>[]</code> — skip <ins>none</ins> of the currently online players (re-process all of them).</li>
-      <li><code>[PlayerId, ...]</code> — skip only the listed currently online players.</li>
-    </ul>
-  </blockquote>
 
   <div align="left">
-    <h3>〔 <code><b>STYLES</b></code> 〕</h3>
+    <h4>⊂ <code><b>Supported Entry Forms</b></code> ⊃</h4>
   </div>
-
-  <blockquote>
-    <h4><code><b>! INFO</b></code></h4>
-      <ul>
-        <li>Flat array of <code>StyledText</code> values used for loader logs.</li>
-        <li>Format: <code>[color, fontWeight, fontSize, ...]</code> repeated for 4 message types.</li>
-      </ul>
-  </blockquote>
 
 ```js
-STYLES: [
-  "#FF775E", "500", "0.95rem", // error   (type 0)
-  "#FFC23D", "500", "0.95rem", // warning (type 1)
-  "#20DD69", "500", "0.95rem", // success (type 2)
-  "#52B2FF", "500", "0.95rem", // info    (type 3)
-]
+"eventName",
 ```
+```js
+["eventName", captureInterrupts?, eventValueFallback?],
+```
+
+  <ul>
+    <li><code>eventName</code> — name of the Bloxd callback to manage</li>
+    <li><code>captureInterrupts</code> — whether the event handler should be wrapped with the built-in <code>Interruption Framework</code>; the value is coerced to <code>boolean</code></li>
+    <li><code>eventValueFallback</code> — value passed to <code>api.setCallbackValueFallback(...)</code> during primary bootstrap; if omitted or <code>undefined</code>, no fallback is applied</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Behavior Details</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li>Invalid entries and duplicate event names throw a startup error</li>
+    <li><code>tick</code> is handled separately and always installed, so listing it in <code>events</code> is optional and mainly for readability</li>
+    <li>Later changes to <code>CL.config.events</code> do not rebuild wrappers or bindings, because those are established only once at loader startup and finalized during primary bootstrap</li>
+  </ul>
+
+  <div align="left">
+    <h3>〔 <code><b>sources</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Block Mode</b></code> ⊃</h4>
+  </div>
+
+```js
+sources: [
+  [blockX, blockY, blockZ],
+  // ...
+],
+use_storage_mode: false,
+```
+
+  <ul>
+    <li>Each entry should be <code>[x, y, z]</code></li>
+    <li>Any entry with length at least <code>3</code> is normalized in place: coordinates are floored and bitwise-coerced to 32-bit integers</li>
+    <li>For each valid entry, the detected block name is written to index <code>3</code> of the same array for execution-detail reporting</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Storage Mode</b></code> ⊃</h4>
+  </div>
+
+```js
+sources: [
+  [registryX, registryY, registryZ],
+  // extra entries are ignored
+],
+use_storage_mode: true,
+```
+
+  <ul>
+    <li>Only <code>sources[0]</code> is used, and it must point to a valid storage registry prepared for loader execution</li>
+    <li>That entry with length at least <code>3</code> is normalized in place: coordinates are floored and bitwise-coerced to 32-bit integers</li>
+    <li>If the registry does not contain valid storage metadata, execution ends without evaluating any code</li>
+  </ul>
+
+  <blockquote>
+    <h4><code><b>! NOTE</b></code></h4>
+    <p><code>sources</code> is read on each boot, so it can be changed dynamically before <code>CL.reboot()</code> or inside <code>CL.onStart</code>. This allows staged source sets and phased boot flows.</p>
+  </blockquote>
+
+  <div align="left">
+    <h3>〔 <code><b>players_to_mark_as_joined</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Possible Values</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li><code>null</code> — mark <ins>all</ins> already-online players as joined for this boot; the effective list is captured at stage <code>2</code></li>
+    <li><code>[]</code> — mark <ins>none</ins> of them</li>
+    <li><code>[playerId, ...]</code> — mark <ins>only listed</ins> players</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Behavior Details</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li>It does not suppress real <code>onPlayerJoin</code> calls that happen later during the same boot</li>
+    <li>If the value is <code>null</code>, the loader uses <code>api.getPlayerIds()</code> <ins>at the start of the boot main process</ins> (stage <code>2</code>) to capture the effective list</li>
+    <li>At stage <code>10</code>, every online player is inserted into the join queue with <code>fromGameReset = false</code></li>
+    <li>Players covered by the effective mark-as-joined list are set to <code>2</code> and skipped during queued-join replay; others remain at <code>1</code> and are processed later</li>
+    <li>If a player joins or rejoins before queued-join replay finishes, their status is set or reset to <code>1</code> and they can still be processed during stage <code>14</code></li>
+  </ul>
+
+  <div align="left">
+    <h3>〔 <code><b>handlers_to_preserve</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Possible Values</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li><code>null</code> — preserve <ins>all</ins> current managed handlers</li>
+    <li><code>[]</code> — preserve <ins>none</ins>; reset all of them</li>
+    <li><code>[eventName, ...]</code> — preserve <ins>only listed</ins> handlers; reset the rest</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Behavior Details</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li>The loader checks names only against its managed event set; unknown names are harmless and have no effect</li>
+    <li><code>tick</code> is always part of that managed set, even if it is not listed in <code>events</code></li>
+    <li>Non-preserved handlers are reset to the empty function before source execution</li>
+  </ul>
+
+  <div align="left">
+    <h3>〔 <code><b>globals_to_preserve</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Possible Values</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li><code>null</code> — preserve <ins>all</ins> current user-created globals</li>
+    <li><code>[]</code> — preserve <ins>none</ins>; delete all of them</li>
+    <li><code>[propertyName, ...]</code> — preserve <ins>only listed</ins> globals; delete the rest</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Behavior Details</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li>Globals that already existed at loader startup are preserved automatically, including loader-managed events and loader-installed <code>CL</code> and <code>IF</code></li>
+    <li>Properties on <code>globalThis</code> are deleted after managed handlers are reset and before source execution begins</li>
+  </ul>
 
 </details>
 
----
+<hr>
 
 <a id="storage-manager"></a>
 <details open>
@@ -725,162 +1027,221 @@ STYLES: [
   </summary>
 
   <div align="left">
-    <h3>〔 <code><b>Purpose</b></code> 〕</h3>
+    <h3>〔 <code><b>Overview</b></code> 〕</h3>
   </div>
+
+  <p><code>CL.SM</code> is the built-in helper for <code>storage mode</code>. It exists only if <code>CL.config.enable_storage_manager</code> was <code>true</code> at loader startup, because the manager and its tick worker are initialized only once on <code>world code init</code>.</p>
+
+  <p>Main purposes:</p>
 
   <ul>
-    <li>Moves your code from block data into chest item attributes, making it effectively impossible to steal.</li>
-    <li>Provides a deterministic storage layout so the loader can find and execute code later.</li>
-    <li>Can spread work across ticks to reduce interruption issues.</li>
+    <li>move code from readable block text data into chest item attribute data, making deployed source effectively inaccessible to exploiters and client-side inspection</li>
+    <li>build a deterministic registry-and-container layout that the loader can execute later from a single registry position</li>
+    <li>handle unloaded chunks automatically during storage operations</li>
+    <li>queue work instead of executing it immediately, so storage operations can be spread across ticks and stay within the lobby TU budget which may reduce the risk of interruptions</li>
   </ul>
 
+  <p>Typical workflow:</p>
+
+  <ul>
+    <li><b>develop in block mode</b> — keep sources readable while testing</li>
+    <li><b>deploy in storage mode</b> — execute later from storage-backed chest data</li>
+  </ul>
+
+  <blockquote>
+    <h4><code><b>! NOTE</b></code></h4>
+    <p>Storage is only a snapshot of your source blocks taken at build time. It is <ins>not</ins> kept in sync automatically. If the source changes, rebuild storage explicitly.</p>
+  </blockquote>
+
   <div align="left">
-    <h3>〔 <code><b>Workflow</b></code> 〕</h3>
+    <h3>〔 <code><b>API Methods</b></code> 〕</h3>
   </div>
 
+  <p><code>globalThis.CL.SM</code> / <code>CL.SM</code> exposes:</p>
+
 ```js
-// 1) Create a registry unit (defines region where storage units can be placed)
-CL.SM.create([lowX, lowY, lowZ], [highX, highY, highZ]);
+/**
+ * Create a storage registry for the specified region.
+ *
+ * Notes:
+ * - Task is queued to the internal tick worker.
+ * - Coordinates are floored and bitwise-coerced to 32-bit integers.
+ * - The minimum position must be `<=` the maximum position on all axes.
+ * - The registry block is placed and configured at the region's minimum position.
+ * - Registry slot 0 stores region metadata for later `inspect`, `build`, and `dispose` calls.
+ *
+ * @param {[number, number, number]} minPosition - region bottom-left corner [x, y, z]
+ * @param {[number, number, number]} maxPosition - region top-right corner [x, y, z]
+ * @returns {void}
+ */
+create(minPosition, maxPosition)
 ```
+
 ```js
-// 2) Remove previously built storage units (optional, recommended to prevent mixed data)
+/**
+ * Inspect a storage registry.
+ *
+ * Notes:
+ * - Task is queued to the internal tick worker.
+ * - The registry position is validated and normalized.
+ * - Registry slot 0 is read and used to log the configured storage region.
+ *
+ * @param {[number, number, number]} registryPosition
+ * @returns {void}
+ */
+inspect(registryPosition)
+```
+
+```js
+/**
+ * Build storage chests within the registry region from the specified source blocks.
+ *
+ * Notes:
+ * - Task is queued to the internal tick worker.
+ * - Each container unit stores up to 4 source block entries.
+ * - Container units are placed deterministically through the region after the registry position,
+ *   advancing `x` first, then `z`, then `y`.
+ * - Coordinates of created container units are written back into registry slots.
+ * - Source text is read from `persisted.shared.text`; missing text becomes an empty string.
+ * - Source text is split into raw segments so each stored item's data
+ *   stays within Bloxd argument limits after JSON escaping.
+ * - To rebuild existing storage properly, dispose it first and then build again.
+ *
+ * @param {[number, number, number]} registryPosition
+ * @param {Array<[number, number, number]>} sourceBlockList
+ * @param {number} [containerBudgetPerTick = 8] - Number of container units processed per tick.
+ * @returns {void}
+ */
+build(registryPosition, sourceBlockList, containerBudgetPerTick)
+```
+
+```js
+/**
+ * Dispose storage data referenced by the registry unit.
+ *
+ * Notes:
+ * - Task is queued to the internal tick worker.
+ * - Container coordinates are read from the registry slot 1 onward.
+ * - All referenced container units are removed by setting their blocks to "Air".
+ * - The registry unit itself is kept, slot 0 metadata is preserved, and all other slots are cleared.
+ *
+ * @param {[number, number, number]} registryPosition
+ * @param {number} [containerBudgetPerTick = 32] - Number of container units removed per tick.
+ * @returns {void}
+ */
+dispose(registryPosition, containerBudgetPerTick)
+```
+
+```js
+/**
+ * Internal tick worker.
+ *
+ * Notes:
+ * - Called automatically when the Storage Manager is enabled at startup.
+ *
+ * @returns {void}
+ */
+_tick()
+```
+
+  <div align="left">
+    <h3>〔 <code><b>Recommended Workflow</b></code> 〕</h3>
+  </div>
+
+  <p><b>(1) Create the registry region once</b></p>
+
+```js
+CL.SM.create([minX, minY, minZ], [maxX, maxY, maxZ]);
+```
+
+  <p><b>(2) Before rebuilding existing storage, dispose it to avoid mixed data</b></p>
+
+```js
 CL.SM.dispose([registryX, registryY, registryZ]);
 ```
+
+  <p><b>(3) Build storage from the current source block list</b></p>
+
 ```js
-// 3) Build storage from your block positions list
 CL.SM.build([registryX, registryY, registryZ], [
-  // ...
-  [27, 4, 14],
-  [27, 4, 12],
-  [27, 4, 10],
+  [blockX, blockY, blockZ],
   // ...
 ]);
 ```
-```js
-// 4) Switch loader to chest mode
 
-// either in real World Code (recommended)
-const configuration = {
+  <p><b>(4) Point the loader to that registry and enable storage mode</b></p>
+
+```js
+let config = {
   // ...
-  BLOCKS: [
-    [registryX, registryY, registryZ]
+  sources: [
+    [registryX, registryY, registryZ],
   ],
-  // ...
-  BM: {
-    is_chest_mode: true,
-    // ...
-  },
+  use_storage_mode: true,
   // ...
 };
-
-// or at runtime
-CL.config.BM.is_chest_mode = true;
-CL.config.BLOCKS = [[registryX, registryY, registryZ]];
-CL.reboot();
 ```
 
   <div align="left">
-    <h3>〔 <code><b>Capacity</b></code> 〕</h3>
+    <h3>〔 <code><b>Storage Format</b></code> 〕</h3>
   </div>
 
-  <p>
-    One storage unit stores up to 4 code blocks data (4 partitions).<br>
-    Therefore, the number of required storage units is <code>Math.floor((blockList.length + 3) / 4)</code>.
-  </p>
+  <p>This is the built-in format used by storage mode. It is mainly useful for debugging or custom tooling.</p>
 
-  <p>
-    Region capacity is the number of blocks inside the axis-aligned box: <code>(dx + 1) * (dy + 1) * (dz + 1) - 1</code>.<br>
-    If the capacity is smaller than the required number of units, the build is rejected.
-  </p>
+  <p>Storage consists of one <ins>registry unit</ins> that holds container positions and many <ins>container units</ins> that store the actual code segments. Both unit types use the <code>"Bedrock"</code> block, and data is stored in <code>"Boat"</code> items.</p>
 
   <div align="left">
-    <h3>〔 <code><b>Performance</b></code> 〕</h3>
+    <h4>⊂ <code><b>Registry Unit</b></code> ⊃</h4>
   </div>
 
   <ul>
-    <li>Use smaller <code>maxStorageUnitsPerTick</code> values if you get many interruptions: <code>CL.SM.build(regPos, blockList, 4)</code></li>
-    <li>Use larger values if you want faster conversion and your world's runtime budget can handle it.</li>
-    <li>Storage management tasks load the relevant chunks automatically.</li>
+    <li>In storage mode, the loader treats <code>CL.config.sources[0]</code> as the registry position</li>
+    <li>Registry slot <code>0</code> stores the region bounds in:
+      <pre><code>item.attributes.customAttributes.region = [minX, minY, minZ, maxX, maxY, maxZ]</code></pre>
+    </li>
+    <li>Registry slots <code>1..35</code> store flat arrays of container coordinates in:
+      <pre><code>item.attributes.customAttributes._</code></pre>
+    </li>
   </ul>
 
-  <blockquote>
-    <h4><code><b>! SAFETY NOTE</b></code></h4>
-      <ul>
-        <li><code>build(...)</code> places solid blocks (default: <code>"Bedrock"</code>) for each storage unit.</li>
-        <li>Place the region far away from gameplay or inside a sealed protected area.</li>
-      </ul>
-  </blockquote>
+  <p>Container-coordinate array format:</p>
+
+```js
+[containerX0, containerY0, containerZ0, containerX1, containerY1, containerZ1, ...]
+```
+
+  <p>Each registry slot can store up to <code>243</code> numbers, which is <code>81</code> container positions.</p>
+
+  <div align="left">
+    <h4>⊂ <code><b>Container Units</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li>Each container has <b>4 partitions</b></li>
+    <li>Each partition corresponds to <b>1 source block</b></li>
+    <li>Each partition reserves <b>9 slots</b></li>
+  </ul>
+
+  <p>Partition-to-slot layout:</p>
+
+  <ul>
+    <li>partition <code>0</code> — slots <code>0..8</code></li>
+    <li>partition <code>1</code> — slots <code>9..17</code></li>
+    <li>partition <code>2</code> — slots <code>18..26</code></li>
+    <li>partition <code>3</code> — slots <code>27..35</code></li>
+  </ul>
+
+  <p>Each used slot stores one raw string segment in:</p>
+
+```js
+item.attributes.customAttributes._
+```
+
+  <p>During boot stage <code>12</code>, the loader concatenates the available text segments of a partition, executes the result through indirect <code>eval</code>, and then continues to the next partition.</p>
 
 </details>
 
----
-
-<a id="storage-format"></a>
-<details open>
-  <summary>
-    <div align="center">
-      <h2>❮ <code><b>🗂️ Storage Format 🗂️</b></code> ❯</h2>
-    </div>
-  </summary>
-
-  <blockquote>
-    <h4><code><b>! INFO</b></code></h4>
-      <ul>
-        <li>This section documents the built-in format, which is useful for debugging or custom tooling.</li>
-        <li>Storage consists of one <ins>registry unit</ins> and many <ins>storage units</ins>.</li>
-      </ul>
-  </blockquote>
-
-  <div align="left">
-    <h3>〔 <code><b>Registry Unit</b></code> 〕</h3>
-  </div>
-
-  <ul>
-    <li>Position: <code>BLOCKS[0]</code> when <code>is_chest_mode = true</code></li>
-    <li>Slot 0 must contain <code>item.attributes.customAttributes.region = [lowX,lowY,lowZ,highX,highY,highZ]</code></li>
-    <li>Slots 1..35 store coordinate lists of storage units in <code>item.attributes.customAttributes._</code></li>
-    <li>Each coordinate list is a flat array: <code>[x0,y0,z0, x1,y1,z1, ...]</code></li>
-  </ul>
-
-  <blockquote>
-    <p>
-      Each registry slot can store up to <code>243</code> numbers (= <code>81</code> positions).<br>
-      If you have more storage units, the manager uses multiple slots.
-  </blockquote>
-
-  <div align="left">
-    <h3>〔 <code><b>Storage Unit</b></code> 〕</h3>
-  </div>
-
-  <ul>
-    <li>Physically: a block placed at some <code>(x,y,z)</code> inside the registry region.</li>
-    <li>Logically: a chest container at that position holding code (text) segments.</li>
-    <li>Contains <ins>4 partitions</ins>, so one storage unit stores up to 4 code blocks data.</li>
-  </ul>
-
-  <div align="left">
-    <h3>〔 <code><b>Partitions & Slots</b></code> 〕</h3>
-  </div>
-
-  <p>
-    Each partition uses <ins>9 slots</ins> (total 36 slots in a chest):
-  </p>
-
-  <ul>
-    <li>Partition <code>0</code>: slots <code>0..8</code></li>
-    <li>Partition <code>1</code>: slots <code>9..17</code></li>
-    <li>Partition <code>2</code>: slots <code>18..26</code></li>
-    <li>Partition <code>3</code>: slots <code>27..35</code></li>
-  </ul>
-
-  <p>
-    Each slot stores a <ins>raw string</ins> data segment in <code>item.attributes.customAttributes._</code>.<br>
-    To execute a partition, the loader concatenates up to 9 text segments and evaluates the result through indirect <code>_eval</code>.
-  </p>
-
-</details>
-
----
+<hr>
 
 <a id="features"></a>
 <details open>
@@ -894,226 +1255,306 @@ CL.reboot();
     <h3>〔 <code><b>Hide World Code</b></code> 〕</h3>
   </div>
 
-  <div align="left">
-    <h4>⊂ <code><b>Description</b></code> ⊃</h4>
-  </div>
-
-  <p>
-    Moving your logic into block data (code blocks) prevents casual copying of your world code, which is normally accessible via <kbd>F8</kbd> or directly through the code editor, including in custom games. However, block data can still be read by attackers (exploiters) where the chunks are loaded.
-  </p>
-
-  <p>
-    For maximum protection, move your code from blocks into chest storage using the <code>Storage Manager</code>. In practice, chest data is effectively impossible to steal.
-  </p>
-
-  <div align="left">
-    <h4>⊂ <code><b>Recommendation</b></code> ⊃</h4>
-  </div>
+  <p>The loader can keep real game logic outside the visible actual <code>World Code</code> field and execute it from external sources instead.</p>
 
   <ul>
-    <li>Place code blocks or storage far away from gameplay areas.</li>
-    <li>Seal them inside a protected multi-layer structure (optionally using bedrock).</li>
-    <li>Optionally use the guard pattern to prevent manual execution by clicking blocks.</li>
+    <li><b>block mode</b> uses readable source blocks and is usually the most convenient option during development</li>
+    <li><b>storage mode</b> executes from storage-backed chest data through a single registry position and is generally stronger for deployment</li>
   </ul>
 
-```js
-if (myId === null) {
-  // runs only during the loader boot (not on player click)
-}
-```
-
-  <div align="left">
-    <h3>〔 <code><b>Unlimited World Code</b></code> 〕</h3>
-  </div>
-
-  <div align="left">
-    <h4>⊂ <code><b>Description</b></code> ⊃</h4>
-  </div>
-
-  <p>
-    Real <code>World Code</code> is limited to <code>16000</code> characters.
-    The loader bypasses this restriction by distributing your logic across any number of blocks or chest storage units.
-  </p>
+  <p>This solves two practical problems at once:</p>
 
   <ul>
-    <li>Execution order follows <code>BLOCKS</code> (or storage order in chest mode).</li>
-    <li>In practice, the <code>BLOCKS</code> array in configuration can hold roughly up to <code>~8000</code> code block positions.</li>
+    <li>the actual <code>World Code</code> stays small and easier to manage</li>
+    <li>your main source code is no longer directly exposed to ordinary players</li>
   </ul>
 
-  <div align="left">
-    <h4>⊂ <code><b>Capacity</b></code> ⊃</h4>
-  </div>
+  <p>Block mode still externalizes code, but its source text can remain exposed through <ins>exploit tools or client-side inspection</ins>. By contrast, storage mode is designed to make deployed source code effectively inaccessible for theft.</p>
 
-  <p>
-    <code>16000</code> chars — real <code>World Code</code> capacity.<br>
-    <code>11450</code> chars — default loader minified source code.<br>
-    <code>13600</code> chars — with maxed out configuration.
-  </p>
+  <p>For the strongest workflow, develop in block mode and move finalized sources into storage with the built-in <a href="#storage-manager"><code><b>Storage Manager</b></code></a>.</p>
 
-  <p>
-    With typical block coordinate entries:
-  </p>
-
-  <ul>
-    <li><code>[-100000,-100000,-100000],</code> -> ~27 chars</li>
-    <li><code>[10,10,10],</code> -> ~12 chars</li>
-  </ul>
-
-  <p>
-    This leaves roughly <code>~2400</code> characters available, which is enough for approximately <code>80–200+</code> block positions directly inside real <code>World Code</code>.
-  </p>
-
-  <div align="left">
-    <h4>⊂ <code><b>Staged Boot Method</b></code> ⊃</h4>
-  </div>
-
-  <p>
-    You can replace <code>CL.config.BLOCKS</code> at runtime and then call <code>CL.reboot()</code>. This allows staged loading of large codebases while keeping only a small set of block positions in real <code>World Code</code>.
-  </p>
-
-```js
-if (myId === null) {
-  const blockList = [
-    // ...
-    [27, 4, 14],
-    [27, 4, 12],
-    [27, 4, 10],
-    // ...
-  ];
-
-  tick = () => {
-    if (!CL.isRunning) {
-      const om = CL.config.OM;
-
-      om.show_boot_status = true;
-      om.show_errors = true;
-      CL.config.BLOCKS = blockList;
-
-      CL.reboot();
-    }
-  };
-}
-```
-
-  <p>
-    If the staged boot depends on your created globals (caches, queues, registries, and so on), preserve them explicitly through <code>OM.globals_to_keep</code> or rebuild them during the next boot.
-  </p>
+  <hr>
 
   <div align="left">
     <h3>〔 <code><b>Dynamic Initialization</b></code> 〕</h3>
   </div>
 
-  <div align="left">
-    <h4>⊂ <code><b>Description</b></code> ⊃</h4>
-  </div>
-
-  <p>
-    During development or testing, you may want to refresh only part of your logic instead of rebooting everything. The loader supports both kinds of re-initialization:
-  </p>
+  <p>The loader supports both targeted local refreshes and full environment rebuilds.</p>
 
   <ul>
-    <li><code>Partial</code> — click a specific code block to re-execute only that block.</li>
-    <li><code>Complete</code> — call <code>CL.reboot()</code> to run a full boot session.</li>
+    <li><code><b>partial</b></code> — manual source re-execution; any source block, even outside the current loader source set, can still be triggered directly by player click, which is useful for development, testing, and quick local fixes</li>
+    <li><code><b>complete</b></code> — full boot session; <code>CL.reboot()</code> starts the loader boot flow using the live configuration</li>
   </ul>
 
-  <p>
-    If executed code defines callback functions, handlers are replaced immediately, which makes hot-swapping logic possible.
-    On reboot, remember that user-created globals may also be reset according to <code>OM.globals_to_keep</code>.
-  </p>
+  <p>Any source re-execution that assigns event handlers can hot-swap the logic of loader-managed Bloxd callbacks: the installed global wrapper stays the same, while the internal active handler reference changes.</p>
+
+  <hr>
 
   <div align="left">
-    <h3>〔 <code><b>Interruption Handling</b></code> 〕</h3>
+    <h3>〔 <code><b>Boot Lifecycle Callbacks</b></code> 〕</h3>
   </div>
 
-  <div align="left">
-    <h4>⊂ <code><b>Description</b></code> ⊃</h4>
-  </div>
-
-  <p>
-    Bloxd can interrupt JavaScript execution mid-flow because of runtime budget limits. Internally, this surfaces as an <code>InternalError</code>.
-    Code Loader includes a built-in <a href="https://github.com/delfineonx/interruption-framework"><code>Interruption Framework</code></a> that can capture such interruptions for selected callbacks, queue the call, and retry it later when you explicitly run the framework.
-  </p>
+  <p><code>CL.onStart</code>, <code>CL.onLoad</code>, and <code>CL.onEnd</code> are built into the loader and run during the boot process. They provide convenient dedicated control points for boot-specific logic and decisions that should not be mixed into ordinary event handlers.</p>
 
   <ul>
-    <li>
-      Enable per event in <code>EVENTS</code> by setting <code>captureInterrupts = 1</code> for that callback.
-    </li>
-    <li>
-      Retries are processed only when <code>IF.tick()</code> runs — usually at the top of your <code>tick</code> callback.
-    </li>
+    <li>use <code>CL.onStart</code> for almost-immediate initialization close to <code>world code init</code>, early preprocessing, or safe configuration changes for the current boot</li>
+    <li>use <code>CL.onLoad</code> to adjust environment state after sources execute but before queued joins are replayed</li>
+    <li>use <code>CL.onEnd</code> to finish game setup, finalize environment state, or clear loader-side memory</li>
   </ul>
-
-  <div align="left">
-    <h4>⊂ <code><b>Runner</b></code> ⊃</h4>
-  </div>
-
-  <p>
-    Call the framework runner once per tick, preferably before any other logic.
-  </p>
-
-```js
-tick = () => {
-  if (CL.isRunning) { return; }
-  IF.tick(); // required if captureInterrupts is enabled for any event
-  // your tick logic...
-};
-```
 
   <div align="left">
     <h4>⊂ <code><b>Interruption Safety</b></code> ⊃</h4>
   </div>
 
-  <p>
-    Capturing interruptions only retries the whole callback. If your handler does "half the work" and is interrupted again, it may repeat work.
-    For relatively heavy code, prefer a small state machine and advance it using
-    <code>IF.sid</code> (your resume state / phase) and optional <code>IF.args</code> (you may attach cached data there so it survives retries).
-  </p>
+  <p>These lifecycle callbacks are <ins>not</ins> the place to use <code>Interruption Framework</code>, because they are not loader-managed events and follow a different execution model. Instead, each one receives a mutable temporary <code>context</code> object that persists across repeated calls on the same boot stage.</p>
+
+  <p>Multi-tick pattern:</p>
 
   <ul>
-    <li><code>IF.rcnt</code> — retry counter for the currently executing function.</li>
-    <li><code>IF.sid</code> — state id you control (set it right before expensive steps).</li>
-    <li><code>IF.args</code> — current args array; you may mutate it (or replace with a bigger array) to include a cache object.</li>
+    <li>store your phase and cache in <code>context</code></li>
+    <li>return <code>false</code> while the callback still has work to do; plain <code>return;</code> behaves the same way because <code>undefined</code> is falsy</li>
+    <li>return <code>true</code> when the work is finished and boot should continue</li>
   </ul>
 
 ```js
-// ---------- IDEMPOTENCY EXAMPLE ----------
-onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
-  // step 0: prepare (runs once, unless you reset IF.sid yourself)
-  if (IF.sid === 0) {
-    const cache = {
-      // put precomputed stuff here
-      // (list of entities, parsed data, etc.)
-    };
+CL.onEnd = (context) => {
+  context.phase ??= 1;
 
-    // attach cache so it survives retries
-    IF.args[6] = cache;
+  // loader-side memory cleanup
+  if (context.phase === 1) {
+    const config = CL.config;
+
+    if (CL.isPrimaryBoot) {
+      delete config.events;
+      delete config.enable_storage_manager;
+      delete config.shutdown_on_startup_error;
+    }
+
+    config.sources = null;
+    CL._bootSources = null;
+
+    // optionally
+    config.players_to_mark_as_joined = null;
+    config.handlers_to_preserve = null;
+    config.globals_to_preserve = null;
+
+    context.phase = 2;
+  }
+
+  if (context.phase === 2) {
+    // ...
+    return;
+  }
+
+  // ...
+
+  return true;
+};
+```
+
+  <hr>
+
+  <div align="left">
+    <h3>〔 <code><b>Boot Profiles</b></code> 〕</h3>
+  </div>
+
+  <div align="left">
+    <h4>⊂ <code><b>Clean Boot</b></code> ⊃</h4>
+  </div>
+
+  <p>Use this when the environment should be rebuilt from scratch, with sources reconstructing everything and the new session should not carry over previous handlers or globals.</p>
+
+```js
+CL.config.players_to_mark_as_joined = [];
+CL.config.handlers_to_preserve = [];
+CL.config.globals_to_preserve = [];
+```
+
+  <div align="left">
+    <h4>⊂ <code><b>Persistent Boot</b></code> ⊃</h4>
+  </div>
+
+  <p>Use this when the boot should mainly execute additional code or run extra setup on top of an already-established environment, without clearing its current state.</p>
+
+```js
+CL.config.players_to_mark_as_joined = null;
+CL.config.handlers_to_preserve = null;
+CL.config.globals_to_preserve = null;
+```
+
+  <div align="left">
+    <h4>⊂ <code><b>Hybrid Boot</b></code> ⊃</h4>
+  </div>
+
+  <p>Use this when the boot should keep only certain parts of the current environment (such as admin tools, loading flow, or specific gameplay data), while the rest is rebuilt or updated.</p>
+
+```js
+CL.config.players_to_mark_as_joined = null;
+CL.config.handlers_to_preserve = ["onPlayerJoin", "onPlayerLeave", "tick", "playerCommand"];
+CL.config.globals_to_preserve = ["propertyName1", "propertyName2", "propertyName3"];
+```
+
+  <hr>
+
+  <div align="left">
+    <h3>〔 <code><b>Phased & Modular Boot Pattern</b></code> 〕</h3>
+  </div>
+
+  <p>The loader captures <code>CL.config</code> separately for each boot session, so every reboot can switch to a different source set, preservation policy, or source mode.</p>
+
+  <p>Examples here are useful for phased initialization, module execution, supervisor-style systems, and larger codebases that are loaded on demand from a small bootstrap.</p>
+  
+```js
+if (myId === null) {
+  tick = () => {
+    // ...
+    if (CL.stage === 0) {
+      CL.onStart = (context) => {
+        const config = CL.config;
+        config.sources = [...];
+        // ...
+        return true;
+      };
+      CL.reboot();
+    }
+    // ...
+  };
+}
+```
+
+```js
+playerCommand = (playerId, command) => {
+  // ...
+  if ($condition) {
+    const moduleName = getModuleName($data);
+
+    if (CL.stage > 0) {
+      CL._log(`Module "${moduleName}" cannot be loaded. Wait for the current boot to finish.`, 1);
+      return true;
+    }
+
+    let isValidModule = false;
+    const config = CL.config;
+
+    if (moduleName === "test") {
+      CL.onStart = (context) => {
+        config.sources = [...];
+        // ...
+        return true;
+      };
+
+      isValidModule = true;
+    }
+
+    if (isValidModule) {
+      CL._log(`Unknown module "${moduleName}".`, 0);
+      return true;
+    }
+
+    CL.reboot();
+    CL._log(`Loading "${moduleName}" module...`, 2);
+    return true;
+  }
+  // ...
+};
+```
+
+  <hr>
+
+  <div align="left">
+    <h3>〔 <code><b>Interruption Framework</b></code> 〕</h3>
+  </div>
+
+  <p><a href="https://github.com/justjake/quickjs-emscripten"><code>QuickJS-emscripten</code></a> engine tracks execution cost and may interrupt an event call (Bloxd callback) once the lobby runtime limit is exceeded.</p>
+
+```js
+if (operation_count % 5000 === 0 && runtime_count > RUNTIME_LOBBY_LIMIT) {
+  interrupt();
+}
+```
+
+  <p>Without extra handling, execution stops mid-flow and may leave partial work, inconsistent state, or lost event processing.</p>
+
+  <p>The loader includes a built-in copy of <a href="https://github.com/delfineonx/interruption-framework"><code>Interruption Framework</code></a> and can connect it directly to event (Bloxd callback) internal wrappers on startup. When enabled, the wrapper tracks the active handler call and queues it for a later retry through <code>IF.tick()</code> if it throws any uncaught error, including <code>InternalError: Interrupted</code>.</p>
+
+  <div align="left">
+    <h4>⊂ <code><b>Integration & Setup</b></code> ⊃</h4>
+  </div>
+
+  <p>Enable interruption capture per event in <code>CL.config.events</code>.</p>
+
+```js
+events: [
+  ["onPlayerChat", 1, null],
+  ["playerCommand", 1],
+]
+```
+
+  <p>If queued calls are never drained through <code>IF.tick()</code>, they accumulate and may eventually cause <code>InternalError: out of memory</code>. Run the framework inside <code>tick</code>, preferably before other logic.</p>
+
+```js
+tick = () => {
+  if (CL.stage) { return; }
+  IF.tick();
+  // your tick logic...
+};
+```
+
+  <div align="left">
+    <h4>⊂ <code><b>Retry Model</b></code> ⊃</h4>
+  </div>
+
+  <p>By default, the framework retries the entire handler with its stored arguments. If execution is interrupted mid-way, a later retry may repeat work that should happen only once.</p>
+
+  <ul>
+    <li>For simple, naturally idempotent, or runtime-light handlers, whole-handler retry is often enough</li>
+    <li>For more complex, stateful, or runtime-heavy handlers, use the framework API to build resumable multi-step logic</li>
+  </ul>
+
+  <div align="left">
+    <h4>⊂ <code><b>Resumable Logic</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li><code>IF.rcnt</code> — retry count for the current call</li>
+    <li><code>IF.sid</code> — user-controlled state id for resumable logic</li>
+    <li><code>IF.args</code> — current arguments array; it persists across retries, so you may mutate, replace, or extend it with extra context objects</li>
+  </ul>
+
+```js
+onPlayerChat = (playerId, chatMessage, channelName) => {
+  if (IF.sid === 0) {
+    // attach context object for retry-persistent data
+    IF.args[3] = {};
     IF.sid = 1;
   }
 
-  const cache = IF.args[6];
+  const context = IF.args[3];
 
-  // step 1
   if (IF.sid === 1) {
-    // ...part A...
+    // part A
     IF.sid = 2;
   }
 
-  // step 2
   if (IF.sid === 2) {
-    // ...part B...
-    IF.sid = 0; // reset when fully done
+    // part B
   }
 };
 ```
 
-  <blockquote>
-    <h4><code><b>! NOTE</b></code></h4>
-    If you do not need retry/resume behavior for an event, keep <code>captureInterrupts</code> disabled. For very heavy work, it is better to split the task across ticks with a <code>Task Scheduler</code> (<code>setTimeout</code> implementation in Bloxd).
-  </blockquote>
+  <div align="left">
+    <h4>⊂ <code><b>Recommendations</b></code> ⊃</h4>
+  </div>
+
+  <ul>
+    <li>Enable interruption capture only for events that really need it</li>
+    <li>Do <ins>not</ins> use the framework inside boot lifecycle callbacks, because their execution model is different</li>
+    <li>For large predictable workloads, prefer intentional multi-tick <ins>scheduling</ins> (using Bloxd <code>setTimeout</code> implementations) over repeated interruption-driven retries</li>
+  </ul>
 
 </details>
 
----
+<hr>
 
 <a id="example"></a>
 <details open>
@@ -1124,169 +1565,301 @@ onPlayerClick = (playerId, wasAltClick, x, y, z, blockName) => {
   </summary>
 
   <div align="left">
-    <h3>〔 <code><b>Files</b></code> 〕</h3>
-  </div>
-
-  <ul>
-    <li>
-      <a href="./assets/delfineonx_example.bloxdschem">
-        <code><b>example .bloxdschem</b></code>
-      </a>
-    </li>
-    <li>
-      <a href="./assets/delfineonx_config.js">
-        <code><b>config .js</b></code>
-      </a>
-    </li>
-  </ul>
-
-  <div align="left">
     <h3>〔 <code><b>Setup</b></code> 〕</h3>
   </div>
 
   <ol>
-    <li>
-      Download and load schematic <code>delfineonx_example.bloxdschem</code>.
-    </li>
-    <li>
-      Paste it using <code>World Builder</code> at position <code>(0, 0, 0)</code>.
-    </li>
-    <li>
-      Open <code>delfineonx_config.js</code>, copy the <code>configuration</code> object, and replace your current config in real <code>World Code</code>.
-    </li>
+    <li>Download and import the schematic <a href="./assets/delfineonx_example.bloxdschem"><code><b>delfineonx_example.bloxdschem</b></code></a>.</li>
+    <li>Paste it with <code>World Builder</code> at position <code>(0, 0, 0)</code>.</li>
+    <li>Put the configuration below into the real <code>World Code</code>.</li>
   </ol>
+
+```js
+let config = {
+  events: [
+    "tick",
+    "onPlayerJoin",
+    "onPlayerLeave",
+    "playerCommand",
+    "onPlayerChat",
+    "onPlayerJump",
+    "onPlayerClick",
+    /*
+    "tick",
+    "onPlayerJoin",
+    "onPlayerLeave",
+    ["playerCommand", 0],
+    ["onPlayerChat", 0, null],
+    ["onPlayerJump", 0],
+    "onPlayerClick",
+    */
+  ],
+
+  sources: [
+    // [6, 25, 6],
+    // [27, 4, 25],
+    [27, 4, 23],
+    [27, 4, 21],
+    [27, 4, 19],
+    [27, 4, 17],
+    [27, 4, 14],
+    [27, 4, 12],
+    [27, 4, 10],
+    [27, 4, 8],
+    [27, 4, 6],
+  ],
+
+  show_boot_status: true,
+  show_error_details: true,
+  show_execution_details: false,
+
+  use_storage_mode: false, //
+  execution_budget_per_tick: 8, //
+  join_budget_per_tick: 8,
+
+  players_to_mark_as_joined: [],
+  handlers_to_preserve: null,
+  globals_to_preserve: null,
+
+  enable_storage_manager: false,
+  shutdown_on_startup_error: true,
+};
+```
 
   <div align="left">
     <h3>〔 <code><b>Showcase</b></code> 〕</h3>
   </div>
 
   <ul>
-    <li>
-      <a href="https://youtu.be/enxQP-3crGM">
-        <code><b>Overview on YouTube</b></code>
-      </a><br>
-    </li>
+    <li><a href="https://youtu.be/enxQP-3crGM"><code><b>Overview on YouTube</b></code></a> — <ins>outdated</ins></li>
   </ul>
 
 </details>
 
----
+<hr>
 
-<a id="troubleshooting"></a>
+<a id="references"></a>
 <details open>
   <summary>
     <div align="center">
-      <h2>❮ <code><b>🧯 Troubleshooting 🧯</b></code> ❯</h2>
+      <h2>❮ <code><b>📎 References 📎</b></code> ❯</h2>
     </div>
   </summary>
 
-  <ul>
-    <li>
-      <code>"Reboot request was denied."</code><br>
-      You called <code>CL.reboot()</code> while another boot session was already running.
-      Wait until <code>CL.isRunning</code> becomes <code>false</code>.
-    </li>
-    <li>
-      <code>"Code Loader: Critical error - ..."</code><br>
-      A fatal loader error occurred during initialization.
-      Common causes include:
-      <ol>
-        <li>Syntax error or accidental edit inside the loader source.</li>
-        <li>Invalid <code>configuration</code>.</li>
-      </ol>
-      <p>
-        <code><ins>Fix</ins>:</code> reinstall the loader code, then re-apply your configuration edits carefully.
-      </p>
-    </li>
-    <li>
-      <b>No code executes from blocks.</b><br>
-      <ol>
-        <li>Double-check your <code>BLOCKS</code> coordinates (you can use <code>CL.logExecutionInfo()</code>).</li>
-        <li>Make sure those blocks contain code in their data.</li>
-        <li>Remember: each executed block runs in its own scope, so "globals" must be on <code>globalThis</code>.</li>
-      </ol>
-    </li>
-    <li>
-      <b>Chest mode: nothing executes / "No storage data found".</b><br>
-      <ol>
-        <li>
-          Ensure chest mode is actually enabled:
-          <code>BM.is_chest_mode = true</code>
-          and
-          <code>BLOCKS = [[registryX, registryY, registryZ]]</code>.
-        </li>
-        <li>
-          Verify that the registry unit exists at the specified position and has region metadata in slot 0. A quick check is <code>CL.SM.check([registryX, registryY, registryZ])</code>.
-        </li>
-        <li>
-          If registry is valid but storage is missing/corrupted, rebuild:
-          <code>CL.SM.dispose(regPos)</code> then <code>CL.SM.build(regPos, blockList)</code>.
-        </li>
-      </ol>
-    </li>
-    <li>
-      <b><code>Storage Manager</code> refuses to build.</b><br>
-      Common messages:
-      <ul>
-        <li>
-          <code>"Invalid registry position..."</code> / <code>"Invalid region positions..."</code><br>
-          You passed something other than <code>[x, y, z]</code> arrays.
-        </li>
-        <li>
-          <code>"Not enough space. Need ... storage units, but region holds ..."</code><br>
-          Enlarge the region (or reduce <code>blockList</code> size). One storage unit stores up to 4 blocks.
-        </li>
-      </ul>
-    </li>
-    <li>
-      <b>Interrupted events are never retried</b><br>
-      <ol>
-        <li>
-          Make sure the event entry has <code>captureInterrupts = 1</code> in <code>EVENTS</code>.
-        </li>
-        <li>
-          Ensure your <code>tick</code> callback calls <code>IF.tick()</code> (and that you do not return before it).
-        </li>
-      </ol>
-    </li>
-    <li>
-      <b><code>onPlayerJoin</code> errors during boot</b><br>
-      Join processing is queued and may run after the player has already left.
-      Start the handler with:
-      <code>if (!api.checkValid(playerId)) { return; }</code>
-    </li>
-    <li>
-      <b>Runtime globals disappear after <code>CL.reboot()</code></b><br>
-      This is controlled by <code>OM.globals_to_keep</code>.
-      Use <code>[]</code> to clear all user-created globals, a name list to preserve selected ones, or <code>null</code> to keep all of them.
-    </li>
-    <li>
-      <b>Same <code>onPlayerJoin</code> logic runs again after <code>CL.reboot()</code></b><br>
-      This is controlled by <code>JM.players_to_skip</code>.
-      With the default <code>[]</code>, currently online players are processed again on reboot.
-      Use <code>null</code> to skip all currently online players for that boot, or <code>[PlayerId, ...]</code> to skip only selected ones.
-    </li>
-  </ul>
+  <div align="left">
+    <h3>〔 <code><b>Boot Stages</b></code> 〕</h3>
+  </div>
 
-</details>
+  <div align="left">
+    <h4>⊂ <code><b>Primary Bootstrap</b></code> ⊃</h4>
+  </div>
 
----
+  <table>
+    <thead>
+      <tr>
+        <th>Stage</th>
+        <th>Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>-3</code></td><td>install managed event accessors on <code>globalThis</code> and apply callback fallback values through <code>api.setCallbackValueFallback(...)</code> when configured</td></tr>
+      <tr><td><code>-2</code></td><td>build the initial global-property set that later must never be deleted during boot sessions</td></tr>
+      <tr><td><code>-1</code></td><td>finish one-time primary bootstrap and proceed to the normal boot process</td></tr>
+    </tbody>
+  </table>
 
-<a id="license-and-credits"></a>
-<details open>
-  <summary>
-    <div align="center">
-      <h2>❮ <code><b>👥 License & Credits 👥</b></code> ❯</h2>
-    </div>
-  </summary>
+  <div align="left">
+    <h4>⊂ <code><b>Normal Boot Session</b></code> ⊃</h4>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Stage</th>
+        <th>Behavior</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td><code>0</code></td><td>idle / stable environment; no boot is active</td></tr>
+      <tr><td><code>1</code></td><td>run <code>CL.onStart(context)</code>, capture the live boot configuration, and expose <code>CL._bootErrors</code> for report helpers</td></tr>
+      <tr><td><code>2</code></td><td>initialize boot-time join metadata and install the temporary <code>onPlayerJoin</code> interceptor</td></tr>
+      <tr><td><code>3</code></td><td>initialize boot-time leave metadata and install the temporary <code>onPlayerLeave</code> interceptor</td></tr>
+      <tr><td><code>4</code></td><td>read <code>handlers_to_preserve</code>; if needed, build the preserved-handler set</td></tr>
+      <tr><td><code>5</code></td><td>reset non-preserved managed handlers to the empty function</td></tr>
+      <tr><td><code>6</code></td><td>read <code>globals_to_preserve</code>; if needed, build the preserved-global set and snapshot current globals</td></tr>
+      <tr><td><code>7</code></td><td>delete non-preserved globals from <code>globalThis</code></td></tr>
+      <tr><td><code>8</code></td><td>release preservation setup metadata for handlers and globals</td></tr>
+      <tr><td><code>9</code></td><td>build the pre-marked player set from <code>players_to_mark_as_joined</code></td></tr>
+      <tr><td><code>10</code></td><td>scan online players, queue their boot joins, and mark selected players as already joined</td></tr>
+      <tr><td><code>11</code></td><td>initialize source execution state for block mode or storage mode, and expose <code>CL._bootSources</code> for report helpers</td></tr>
+      <tr><td><code>12</code></td><td>execute configured sources</td></tr>
+      <tr><td><code>13</code></td><td>run <code>CL.onLoad(context)</code></td></tr>
+      <tr><td><code>14</code></td><td>process queued joins and restore the final <code>onPlayerJoin</code> handler</td></tr>
+      <tr><td><code>15</code></td><td>restore the final <code>onPlayerLeave</code> handler</td></tr>
+      <tr><td><code>16</code></td><td>run <code>CL.onEnd(context)</code></td></tr>
+      <tr><td><code>17</code></td><td>finalize the boot, report results, clear temporary boot metadata, restore the final tick handler, and return the loader to idle stage <code>0</code></td></tr>
+    </tbody>
+  </table>
+
+  <div align="left">
+    <h3>〔 <code><b>Full Event Config List</b></code> 〕</h3>
+  </div>
 
 ```js
-// Code Loader v2026-03-09-0001
-// Interruption Framework v2026-03-01-0001
-// Copyright (c) 2025-2026 delfineonx
-// SPDX-License-Identifier: Apache-2.0
+"tick",
+"onClose",
+"onPlayerJoin",
+"onPlayerLeave",
+"onPlayerJump",
+"onRespawnRequest",
+"playerCommand",
+"onPlayerChat",
+"onPlayerChangeBlock",
+"onPlayerDropItem",
+"onPlayerPickedUpItem",
+"onPlayerSelectInventorySlot",
+"onBlockStand",
+"onPlayerAttemptCraft",
+"onPlayerCraft",
+"onPlayerAttemptOpenChest",
+"onPlayerOpenedChest",
+"onPlayerMoveItemOutOfInventory",
+"onPlayerMoveInvenItem",
+"onPlayerMoveItemIntoIdxs",
+"onPlayerSwapInvenSlots",
+"onPlayerMoveInvenItemWithAmt",
+"onPlayerAttemptAltAction",
+"onPlayerAltAction",
+"onPlayerClick",
+"onPlayerClickUp",
+"onClientOptionUpdated",
+"onMobSettingUpdated",
+"onInventoryUpdated",
+"onChestUpdated",
+"onWorldChangeBlock",
+"onCreateBloxdMeshEntity",
+"onEntityCollision",
+"onPlayerAttemptSpawnMob",
+"onWorldAttemptSpawnMob",
+"onPlayerSpawnMob",
+"onWorldSpawnMob",
+"onWorldAttemptDespawnMob",
+"onMobDespawned",
+"onPlayerAttack",
+"onPlayerDamagingOtherPlayer",
+"onPlayerDamagingMob",
+"onMobDamagingPlayer",
+"onMobDamagingOtherMob",
+"onAttemptKillPlayer",
+"onPlayerKilledOtherPlayer",
+"onMobKilledPlayer",
+"onPlayerKilledMob",
+"onMobKilledOtherMob",
+"onPlayerPotionEffect",
+"onPlayerDamagingMeshEntity",
+"onPlayerBreakMeshEntity",
+"onPlayerUsedThrowable",
+"onPlayerThrowableHitTerrain",
+"onTouchscreenActionButton",
+"onTaskClaimed",
+"onChunkLoaded",
+"onPlayerRequestChunk",
+"onItemDropCreated",
+"onPlayerStartChargingItem",
+"onPlayerFinishChargingItem",
+"onPlayerFinishQTE",
+"onPlayerBoughtShopItem",
+"doPeriodicSave",
+```
+
+```js
+"tick",
+["onClose", 0],
+["onPlayerJoin", 0],
+["onPlayerLeave", 0],
+["onPlayerJump", 0],
+["onRespawnRequest", 0, [0, -10000, 0]],
+["playerCommand", 0, undefined],
+["onPlayerChat", 0, null],
+["onPlayerChangeBlock", 0, "preventChange"],
+["onPlayerDropItem", 0, "preventDrop"],
+["onPlayerPickedUpItem", 0],
+["onPlayerSelectInventorySlot", 0],
+["onBlockStand", 0],
+["onPlayerAttemptCraft", 0, "preventCraft"],
+["onPlayerCraft", 0],
+["onPlayerAttemptOpenChest", 0, "preventOpen"],
+["onPlayerOpenedChest", 0],
+["onPlayerMoveItemOutOfInventory", 0, "preventChange"],
+["onPlayerMoveInvenItem", 0, "preventChange"],
+["onPlayerMoveItemIntoIdxs", 0, "preventChange"],
+["onPlayerSwapInvenSlots", 0, "preventChange"],
+["onPlayerMoveInvenItemWithAmt", 0, "preventChange"],
+["onPlayerAttemptAltAction", 0, "preventAction"],
+["onPlayerAltAction", 0],
+["onPlayerClick", 0],
+["onPlayerClickUp", 0],
+["onClientOptionUpdated", 0],
+["onMobSettingUpdated", 0],
+["onInventoryUpdated", 0],
+["onChestUpdated", 0],
+["onWorldChangeBlock", 0, "preventChange"],
+["onCreateBloxdMeshEntity", 0],
+["onEntityCollision", 0],
+["onPlayerAttemptSpawnMob", 0, "preventSpawn"],
+["onWorldAttemptSpawnMob", 0, "preventSpawn"],
+["onPlayerSpawnMob", 0],
+["onWorldSpawnMob", 0],
+["onWorldAttemptDespawnMob", 0, "preventDespawn"],
+["onMobDespawned", 0],
+["onPlayerAttack", 0],
+["onPlayerDamagingOtherPlayer", 0, "preventDamage"],
+["onPlayerDamagingMob", 0, "preventDamage"],
+["onMobDamagingPlayer", 0, "preventDamage"],
+["onMobDamagingOtherMob", 0, "preventDamage"],
+["onAttemptKillPlayer", 0, "preventDeath"],
+["onPlayerKilledOtherPlayer", 0, "keepInventory"],
+["onMobKilledPlayer", 0, "keepInventory"],
+["onPlayerKilledMob", 0, "preventDrop"],
+["onMobKilledOtherMob", 0, "preventDrop"],
+["onPlayerPotionEffect", 0],
+["onPlayerDamagingMeshEntity", 0],
+["onPlayerBreakMeshEntity", 0],
+["onPlayerUsedThrowable", 0],
+["onPlayerThrowableHitTerrain", 0],
+["onTouchscreenActionButton", 0],
+["onTaskClaimed", 0],
+["onChunkLoaded", 0],
+["onPlayerRequestChunk", 0],
+["onItemDropCreated", 0],
+["onPlayerStartChargingItem", 0],
+["onPlayerFinishChargingItem", 0],
+["onPlayerFinishQTE", 0],
+["onPlayerBoughtShopItem", 0],
+["doPeriodicSave", 0],
 ```
 
 </details>
 
----
+<hr>
+
+<a id="license"></a>
+<details open>
+  <summary>
+    <div align="center">
+      <h2>❮ <code><b>👥 License 👥</b></code> ❯</h2>
+    </div>
+  </summary>
+
+```js
+// Code Loader v2026-04-22-0001
+// Interruption Framework v2026-04-22-0001
+// Copyright (c) 2025-2026 delfineonx
+// SPDX-License-Identifier: Apache-2.0
+```
+
+  <p><code>Code Loader</code>, its built-in <code>Storage Manager</code>, and the bundled <code>Interruption Framework</code> are distributed together in the same source file.</p>
+
+</details>
+
+<hr>
