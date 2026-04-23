@@ -1,4 +1,4 @@
-// Code Loader v2026-04-22-0001
+// Code Loader v2026-04-23-0001
 // Interruption Framework v2026-04-22-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -43,8 +43,8 @@ let config = {
   U,
   V=[],
   W=[],
-  X=D(A),
-  Y=D(A),
+  X=[],
+  Y=[],
   Z,
   a,
   b,
@@ -222,118 +222,121 @@ let config = {
     b="onPlayerJoin",
     c="onPlayerLeave",
     d=x.config.events,
-    e=D(A);
-    for(let f=0,g=d.length;f<g;f++){
-      let h=d[f],
-      i,j=!1,k;
-      if(typeof h==="string"){
-        i=h
-      }else if(Array.isArray(h)&&typeof h[0]==="string"){
-        i=h[0];
-        j=!!h[1];
-        k=h[2]
+    e=D(A),
+    f,g;
+    for(let h=0,i=d.length;h<i;h++){
+      f=d[h];
+      let j,k=!1,l;
+      if(typeof f==="string"){
+        j=f
+      }else if(Array.isArray(f)&&typeof f[0]==="string"){
+        j=f[0];
+        k=!!f[1];
+        l=f[2]
       }else{
-        throw new TypeError("Invalid event entry at index "+f)
+        throw new TypeError("Invalid event entry at index "+h)
       }
-      if(e[i]){
-        throw new TypeError('Duplicate event name "'+i+'"');
+      if(e[j]){
+        throw new TypeError('Duplicate event name "'+j+'"');
       }
-      e[i]=1;
-      if(i===a){continue}
-      V[V.length]=i;
-      W[W.length]=k;
-      if(i===b){
+      e[j]=1;
+      if(j===a){continue}
+      g=V.length;
+      V[g]=j;
+      W[g]=l;
+      if(j===b){
         M=E;
         L=E;
-        X[b]=_=>{
+        X[g]=_=>{
           if(x.stage<3||x.stage>14){
             L=typeof _==="function"?_:E
           }else{
             M=typeof _==="function"?_:E
           }
         };
-        Y[b]=()=>x.stage<3||x.stage>14?L:M;
-        if(j){
-          const l=y;
-          C[b]=function(m,n){
-            l.en=1;
-            l.fn=L;
-            l.args=[m,n];
-            l.sid=0;
+        Y[g]=()=>x.stage<3||x.stage>14?L:M;
+        if(k){
+          const m=y;
+          C[b]=function(n,o){
+            m.en=1;
+            m.fn=L;
+            m.args=[n,o];
+            m.sid=0;
             try{
-              return L(m,n)
+              return L(n,o)
             }finally{
-              l.en=0
+              m.en=0
             }
           }
         }else{
-          C[b]=function(m,n){
-            return L(m,n)
+          C[b]=function(n,o){
+            return L(n,o)
           }
         }
-      }else if(i===c){
+      }else if(j===c){
         T=E;
         S=E;
-        X[c]=_=>{
+        X[g]=_=>{
           if(x.stage<4||x.stage>15){
             S=typeof _==="function"?_:E
           }else{
             T=typeof _==="function"?_:E
           }
         };
-        Y[c]=()=>x.stage<4||x.stage>15?S:T;
-        if(j){
-          const l=y;
-          C[c]=function(m,n){
-            l.en=1;
-            l.fn=S;
-            l.args=[m,n];
-            l.sid=0;
+        Y[g]=()=>x.stage<4||x.stage>15?S:T;
+        if(k){
+          const m=y;
+          C[c]=function(n,o){
+            m.en=1;
+            m.fn=S;
+            m.args=[n,o];
+            m.sid=0;
             try{
-              return S(m,n)
+              return S(n,o)
             }finally{
-              l.en=0
+              m.en=0
             }
           }
         }else{
-          C[c]=function(m,n){
-            return S(m,n)
+          C[c]=function(n,o){
+            return S(n,o)
           }
         }
       }else{
-        let z=E;
-        X[i]=_=>{z=typeof _==="function"?_:E};
-        Y[i]=()=>z;
-        if(j){
-          const l=y;
-          C[i]=function(m,n,o,p,q,r,s,t,u){
-            l.en=1;
-            l.fn=z;
-            l.args=[m,n,o,p,q,r,s,t,u];
-            l.sid=0;
+        let w=E;
+        X[g]=_=>{w=typeof _==="function"?_:E};
+        Y[g]=()=>w;
+        if(k){
+          const m=y;
+          C[j]=function(n,o,p,q,r,s,t,u,v){
+            m.en=1;
+            m.fn=w;
+            m.args=[n,o,p,q,r,s,t,u,v];
+            m.sid=0;
             try{
-              return z(m,n,o,p,q,r,s,t,u)
+              return w(n,o,p,q,r,s,t,u,v)
             }finally{
-              l.en=0
+              m.en=0
             }
           }
         }else{
-          C[i]=function(m,n,o,p,q,r,s,t,u){
-            return z(m,n,o,p,q,r,s,t,u)
+          C[j]=function(n,o,p,q,r,s,t,u,v){
+            return w(n,o,p,q,r,s,t,u,v)
           }
         }
       }
     }
-    V[V.length]=a;
-    W[W.length]=B;
-    X[a]=_=>{
+    g=V.length;
+    V[g]=a;
+    W[g]=B;
+    X[g]=_=>{
       if(x.stage===0){
         J=typeof _==="function"?_:E
       }else{
         K=typeof _==="function"?_:E
       }
     };
-    Y[a]=()=>x.stage===0?J:K
+    Y[g]=()=>x.stage===0?J:K
   };
   let $B=()=>{
     if(x.stage===-3){
@@ -347,12 +350,14 @@ let config = {
         C[b]=1;
         Object.defineProperty(C,b,{
           configurable:!0,
-          set:X[b],
-          get:Y[b]
+          set:X[w],
+          get:Y[w]
         });
         w++
       }
       W=B;
+      X=B;
+      Y=B;
       w=0;
       x.stage=-2
     }
@@ -539,7 +544,7 @@ let config = {
         while(w<b){
           c=V[w];
           if(!(c in a)){
-            X[c](E)
+            C[c]=E
           }
           w++
         }

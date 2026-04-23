@@ -1352,6 +1352,47 @@ CL.onEnd = (context) => {
 };
 ```
 
+```js
+const createProcess = function* (context) {
+  // phase 1
+  {
+    const config = CL.config;
+  
+    if (CL.isPrimaryBoot) {
+      delete config.events;
+      delete config.enable_storage_manager;
+      delete config.shutdown_on_startup_error;
+    }
+  
+    config.sources = null;
+    CL._bootSources = null;
+  
+    config.players_to_mark_as_joined = null;
+    config.handlers_to_preserve = null;
+    config.globals_to_preserve = null;
+  }
+
+  // phase 2
+  {
+    // ...
+    yield;
+  }
+
+  // ...
+
+  return true;
+};
+
+const _eval = eval;
+
+CL.onEnd = (context) => {
+  _eval();
+  const process = context.process ??= createProcess(context);
+  const result = process.next();
+  return !!result.value || result.done;
+};
+```
+
   <hr>
 
   <div align="left">
@@ -1852,7 +1893,7 @@ let config = {
   </summary>
 
 ```js
-// Code Loader v2026-04-22-0001
+// Code Loader v2026-04-23-0001
 // Interruption Framework v2026-04-22-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0

@@ -1,4 +1,4 @@
-// Code Loader v2026-04-22-0001
+// Code Loader v2026-04-23-0001
 // Interruption Framework v2026-04-22-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
@@ -126,11 +126,11 @@ let config = {
   let _activeLeaveHandler;
   let _userLeaveHandler;
   let _bootLeaveRecords;
-  
+
   const _managedEventNames = []; // [eventName, ...]
-  let _eventValueFallbackByIndex = []; // [eventValueFallback, ...]
-  const _setHandlerByEventName = _createObject(_null); // {eventName -> setter (closure)}
-  const _getHandlerByEventName = _createObject(_null); // {eventName -> getter (closure)}
+  let _eventValueFallbacks = []; // [eventValueFallback, ...]
+  let _eventHandlerSetters = []; // [eventHandlerSetter, ...]
+  let _eventHandlerGetters = []; // [eventHandlerGetter, ...]
   let _handlersToPreserveList; // [eventName, ...]
   let _handlersToPreserveSet; // {eventName -> 1}
 
@@ -141,7 +141,7 @@ let config = {
   let _globalKeysSnapshotList; // [propertyName, ...]
 
   let _executeSourceCode;
-  
+
   let _useStorageMode;
   let _executionBudgetPerTick;
   let _executionErrorWriteIndex;
@@ -331,8 +331,10 @@ let config = {
     const eventConfigList = _CL_.config.events;
     const seenEventNameSet = _createObject(_null);
 
+    let eventEntry, managedEventIndex;
+
     for (let eventIndex = 0, eventCount = eventConfigList.length; eventIndex < eventCount; eventIndex++) {
-      const eventEntry = eventConfigList[eventIndex];
+      eventEntry = eventConfigList[eventIndex];
 
       let eventName, captureInterrupts = false, eventValueFallback;
 
@@ -353,20 +355,21 @@ let config = {
 
       if (eventName === tickEventName) { continue; }
 
-      _managedEventNames[_managedEventNames.length] = eventName;
-      _eventValueFallbackByIndex[_eventValueFallbackByIndex.length] = eventValueFallback;
+      managedEventIndex = _managedEventNames.length;
+      _managedEventNames[managedEventIndex] = eventName;
+      _eventValueFallbacks[managedEventIndex] = eventValueFallback;
 
       if (eventName === onPlayerJoinEventName) {
         _userJoinHandler = _EMPTY_FN;
         _activeJoinHandler = _EMPTY_FN;
-        _setHandlerByEventName[onPlayerJoinEventName] = (fn) => {
+        _eventHandlerSetters[managedEventIndex] = (fn) => {
           if (_CL_.stage < 3 || _CL_.stage > 14) {
             _activeJoinHandler = (typeof fn === "function") ? fn : _EMPTY_FN;
           } else {
             _userJoinHandler = (typeof fn === "function") ? fn : _EMPTY_FN;
           }
         };
-        _getHandlerByEventName[onPlayerJoinEventName] = () => ((_CL_.stage < 3 || _CL_.stage > 14) ? _activeJoinHandler : _userJoinHandler);
+        _eventHandlerGetters[managedEventIndex] = () => ((_CL_.stage < 3 || _CL_.stage > 14) ? _activeJoinHandler : _userJoinHandler);
         if (captureInterrupts) {
           const _IF = _IF_;
           _globalThis[onPlayerJoinEventName] = function (playerId, fromGameReset) {
@@ -388,14 +391,14 @@ let config = {
       } else if (eventName === onPlayerLeaveEventName) {
         _userLeaveHandler = _EMPTY_FN;
         _activeLeaveHandler = _EMPTY_FN;
-        _setHandlerByEventName[onPlayerLeaveEventName] = (fn) => {
+        _eventHandlerSetters[managedEventIndex] = (fn) => {
           if (_CL_.stage < 4 || _CL_.stage > 15) {
             _activeLeaveHandler = (typeof fn === "function") ? fn : _EMPTY_FN;
           } else {
             _userLeaveHandler = (typeof fn === "function") ? fn : _EMPTY_FN;
           }
         };
-        _getHandlerByEventName[onPlayerLeaveEventName] = () => ((_CL_.stage < 4 || _CL_.stage > 15) ? _activeLeaveHandler : _userLeaveHandler);
+        _eventHandlerGetters[managedEventIndex] = () => ((_CL_.stage < 4 || _CL_.stage > 15) ? _activeLeaveHandler : _userLeaveHandler);
         if (captureInterrupts) {
           const _IF = _IF_;
           _globalThis[onPlayerLeaveEventName] = function (playerId, serverIsShuttingDown) {
@@ -416,8 +419,8 @@ let config = {
         }
       } else {
         let _eventHandler = _EMPTY_FN;
-        _setHandlerByEventName[eventName] = (fn) => { _eventHandler = (typeof fn === "function") ? fn : _EMPTY_FN };
-        _getHandlerByEventName[eventName] = () => _eventHandler;
+        _eventHandlerSetters[managedEventIndex] = (fn) => { _eventHandler = (typeof fn === "function") ? fn : _EMPTY_FN };
+        _eventHandlerGetters[managedEventIndex] = () => _eventHandler;
         if (captureInterrupts) {
           const _IF = _IF_;
           _globalThis[eventName] = function (arg0, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) {
@@ -439,16 +442,17 @@ let config = {
       }
     }
 
-    _managedEventNames[_managedEventNames.length] = tickEventName;
-    _eventValueFallbackByIndex[_eventValueFallbackByIndex.length] = _undefined;
-    _setHandlerByEventName[tickEventName] = (fn) => {
+    managedEventIndex = _managedEventNames.length;
+    _managedEventNames[managedEventIndex] = tickEventName;
+    _eventValueFallbacks[managedEventIndex] = _undefined;
+    _eventHandlerSetters[managedEventIndex] = (fn) => {
       if (_CL_.stage === 0) {
         _activeTickHandler = (typeof fn === "function") ? fn : _EMPTY_FN;
       } else {
         _userTickHandler = (typeof fn === "function") ? fn : _EMPTY_FN;
       }
     };
-    _getHandlerByEventName[tickEventName] = () => ((_CL_.stage === 0) ? _activeTickHandler : _userTickHandler);
+    _eventHandlerGetters[managedEventIndex] = () => ((_CL_.stage === 0) ? _activeTickHandler : _userTickHandler);
   };
 
   let _primaryTick = () => {
@@ -457,21 +461,23 @@ let config = {
       const eventCount = _managedEventNames.length;
       while (_bootCursor < eventCount) {
         const eventName = _managedEventNames[_bootCursor];
-        const eventValueFallback = _eventValueFallbackByIndex[_bootCursor];
+        const eventValueFallback = _eventValueFallbacks[_bootCursor];
         if (eventValueFallback !== _undefined) {
           _api.setCallbackValueFallback(eventName, eventValueFallback);
         }
         _globalThis[eventName] = 1;
         Object.defineProperty(_globalThis, eventName, {
           configurable: true,
-          set: _setHandlerByEventName[eventName],
-          get: _getHandlerByEventName[eventName],
+          set: _eventHandlerSetters[_bootCursor],
+          get: _eventHandlerGetters[_bootCursor],
         });
 
         _bootCursor++;
       }
 
-      _eventValueFallbackByIndex = _undefined;
+      _eventValueFallbacks = _undefined;
+      _eventHandlerSetters = _undefined;
+      _eventHandlerGetters = _undefined;
 
       _bootCursor = 0;
       _CL_.stage = -2;
@@ -714,7 +720,7 @@ let config = {
         while (_bootCursor < eventCount) {
           eventName = _managedEventNames[_bootCursor];
           if (!(eventName in _handlersToPreserveSet)) {
-            _setHandlerByEventName[eventName](_EMPTY_FN);
+            _globalThis[eventName] = _EMPTY_FN;
           }
           _bootCursor++;
         }
