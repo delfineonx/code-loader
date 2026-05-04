@@ -4,9 +4,8 @@
 <div align="center">
   <h1>Code Loader</h1>
   <p>
-    Extend and automatically execute your lobby code from <code>block data</code> or <code>chest data</code>.<br>
+    Extend and automatically execute your lobby code from <code>block data</code>.<br>
     Flexible loader API helps manage boot safety during non-atomic setup and source execution.<br>
-    Includes built-in <code>Storage Manager</code> for moving source code into chest storage.<br>
     Includes built-in <a href="https://github.com/delfineonx/interruption-framework"><code>Interruption Framework</code></a> for optional interruption-safety of managed event calls.
   </p>
   <p>
@@ -14,7 +13,6 @@
     <a href="#usage-specifics"><kbd>Usage Specifics</kbd></a> &nbsp;•&nbsp;
     <a href="#api-methods"><kbd>API Methods</kbd></a> &nbsp;•&nbsp;
     <a href="#configuration"><kbd>Configuration</kbd></a> &nbsp;•&nbsp;
-    <a href="#storage-manager"><kbd>Storage Manager</kbd></a> &nbsp;•&nbsp;
     <a href="#features"><kbd>Features</kbd></a> &nbsp;•&nbsp;
     <a href="#example"><kbd>Example</kbd></a> &nbsp;•&nbsp;
     <a href="#references"><kbd>References</kbd></a> &nbsp;•&nbsp;
@@ -32,7 +30,7 @@
     </div>
   </summary>
 
-  <p>Paste the loader source code into your real <code>World Code</code> in full.</p>
+  <p>Paste the loader code into your actual <code>World Code</code> in full.</p>
 
   <h2>
     <a href="./src/code_loader_minified.js"><code><b>minified</b></code></a>
@@ -53,7 +51,7 @@
     <li>use <code>CL.onStart</code> for almost-immediate boot-time setup or preprocessing close to <code>world code init</code>; this <ins>may include</ins> assignments to event (Bloxd callback) handlers</li>
   </ul>
 
-  <p>However, the intended workflow is still to keep actual game logic in source blocks or chest storage.</p>
+  <p>However, the intended workflow is still to keep actual game logic in source blocks.</p>
 
 </details>
 
@@ -133,7 +131,7 @@ onPlayerChat = (playerId, chatMessage, channelName) => {
     <h3>〔 <code><b>Scopes, Closures, Globals</b></code> 〕</h3>
   </div>
 
-  <p>Configured sources (multiple <code>"Code Blocks"</code>) are evaluated separately, not in one shared local scope.</p>
+  <p>Configured source blocks are evaluated separately, not in one shared local scope.</p>
 
   <ul>
     <li><code>let</code> and <code>const</code> stay local to the source where they are declared</li>
@@ -382,18 +380,6 @@ if (myId == null) {
 
 ```js
 /**
- * Optional Storage Manager object.
- *
- * Notes:
- * - Exposed only if `config.enable_storage_manager` was `true` during loader startup.
- *
- * @type {object | undefined}
- */
-SM
-```
-
-```js
-/**
  * Live boot configuration object.
  *
  * Notes:
@@ -437,13 +423,8 @@ stage
 /**
  * Progress cursor of the current or most recent boot session.
  *
- * Block mode:
+ * Notes:
  * - Execution index of entries in `CL.config.sources`.
- *
- * Storage mode:
- * - Execution index of storage partitions derived from built containers.
- * - Usually matches the original index of entries in `sourceBlockList` used to build storage,
- *   but may continue through up to 3 trailing empty partitions in the last partially filled container.
  *
  * @type {number}
  */
@@ -500,6 +481,7 @@ onStart
  *
  * Typical uses:
  * - Modify pre-join environment state and data.
+ * - Execute additional sources manually.
  * - Mutate `CL.bootJoinStatus`.
  * - Inspect `CL.bootLeaveRecords`.
  *
@@ -629,13 +611,8 @@ logErrorDetails(showSuccessMessage)
 /**
  * Broadcast execution details of the current or most recent boot.
  *
- * Block mode:
- * - Lists executed source blocks with their coordinates and detected names.
- *
- * Storage mode:
- * - Reports execution from the configured storage registry.
- *
  * Notes:
+ * - Lists executed source blocks with their coordinates and detected names.
  * - Uses live internal metadata during boot.
  * - Falls back to retained last-boot data after the boot completes.
  *
@@ -695,8 +672,7 @@ _log.payloads
  * - `[onStartName, onStartMessage, onLoadName, onLoadMessage, onEndName, onEndMessage, executionErrorEntry, ...]`
  *
  * Execution error entry format:
- * - Block mode: `[name, message, x, y, z]`
- * - Storage mode: `[name, message, x, y, z, containerUnitIndex, containerPartitionIndex]`
+ * - `[name, message, x, y, z]`
  *
  * @type {Array<string | [string, string, number, number, number, number?, number?] | null> | null}
  */
@@ -743,7 +719,6 @@ let config = {
   show_error_details: true,
   show_execution_details: false,
 
-  use_storage_mode: false,
   execution_budget_per_tick: 8,
   join_budget_per_tick: 8,
 
@@ -751,7 +726,6 @@ let config = {
   handlers_to_preserve: null,
   globals_to_preserve: null,
 
-  enable_storage_manager: false,
   shutdown_on_startup_error: true,
 };
 ```
@@ -783,7 +757,7 @@ let config = {
         <td><code>Array</code></td>
         <td><code>[]</code></td>
         <td>each boot</td>
-        <td>Execution source positions. In block mode, entries refer to source blocks. In storage mode, only <code>sources[0]</code> is used and it must point to the storage registry.</td>
+        <td>List of source block positions to execute.</td>
       </tr>
       <tr>
         <td><code>show_boot_status</code></td>
@@ -807,18 +781,11 @@ let config = {
         <td>Whether the end-of-boot report includes source execution details.</td>
       </tr>
       <tr>
-        <td><code>use_storage_mode</code></td>
-        <td><code>boolean</code></td>
-        <td><code>false</code></td>
-        <td>each boot</td>
-        <td>Selects the source mode for the current boot: <code>false</code> = direct block-data execution, <code>true</code> = storage execution through the registry.</td>
-      </tr>
-      <tr>
         <td><code>execution_budget_per_tick</code></td>
         <td><code>number</code></td>
         <td><code>8</code></td>
         <td>each boot<br><br>when <code>sources.length &gt; 0</code></td>
-        <td>Maximum source execution steps per tick. In block mode, one step = one source block. In storage mode, one step = one storage partition. Clamped to at least <code>1</code>.</td>
+        <td>Maximum number of source blocks executed per tick. Clamped to at least <code>1</code>.</td>
       </tr>
       <tr>
         <td><code>join_budget_per_tick</code></td>
@@ -847,13 +814,6 @@ let config = {
         <td><code>null</code></td>
         <td>each boot</td>
         <td>Controls which user-created globals are not deleted before source execution.</td>
-      </tr>
-      <tr>
-        <td><code>enable_storage_manager</code></td>
-        <td><code>boolean</code></td>
-        <td><code>false</code></td>
-        <td>startup-only</td>
-        <td>Whether the loader <code>Storage Manager</code> (<code>CL.SM</code>) is exposed and its internal tick worker is installed.</td>
       </tr>
       <tr>
         <td><code>shutdown_on_startup_error</code></td>
@@ -900,40 +860,17 @@ let config = {
     <h3>〔 <code><b>sources</b></code> 〕</h3>
   </div>
 
-  <div align="left">
-    <h4>⊂ <code><b>Block Mode</b></code> ⊃</h4>
-  </div>
-
 ```js
 sources: [
   [blockX, blockY, blockZ],
   // ...
 ],
-use_storage_mode: false,
 ```
 
   <ul>
     <li>Each entry should be <code>[x, y, z]</code></li>
     <li>Any entry with length at least <code>3</code> is normalized in place: coordinates are floored and bitwise-coerced to 32-bit integers</li>
     <li>For each valid entry, the detected block name is written to index <code>3</code> of the same array for execution-detail reporting</li>
-  </ul>
-
-  <div align="left">
-    <h4>⊂ <code><b>Storage Mode</b></code> ⊃</h4>
-  </div>
-
-```js
-sources: [
-  [registryX, registryY, registryZ],
-  // extra entries are ignored
-],
-use_storage_mode: true,
-```
-
-  <ul>
-    <li>Only <code>sources[0]</code> is used, and it must point to a valid storage registry prepared for loader execution</li>
-    <li>That entry with length at least <code>3</code> is normalized in place: coordinates are floored and bitwise-coerced to 32-bit integers</li>
-    <li>If the registry does not contain valid storage metadata, execution ends without evaluating any code</li>
   </ul>
 
   <blockquote>
@@ -1018,231 +955,6 @@ use_storage_mode: true,
 
 <hr>
 
-<a id="storage-manager"></a>
-<details open>
-  <summary>
-    <div align="center">
-      <h2>❮ <code><b>🛡️ Storage Manager 🛡️</b></code> ❯</h2>
-    </div>
-  </summary>
-
-  <div align="left">
-    <h3>〔 <code><b>Overview</b></code> 〕</h3>
-  </div>
-
-  <p><code>CL.SM</code> is the built-in helper for <code>storage mode</code>. It exists only if <code>CL.config.enable_storage_manager</code> was <code>true</code> at loader startup, because the manager and its tick worker are initialized only once on <code>world code init</code>.</p>
-
-  <p>Main purposes:</p>
-
-  <ul>
-    <li>move code from readable block text data into chest item attribute data, making deployed source effectively inaccessible to exploiters and client-side inspection</li>
-    <li>build a deterministic registry-and-container layout that the loader can execute later from a single registry position</li>
-    <li>handle unloaded chunks automatically during storage operations</li>
-    <li>queue work instead of executing it immediately, so storage operations can be spread across ticks and stay within the lobby TU budget which may reduce the risk of interruptions</li>
-  </ul>
-
-  <p>Typical workflow:</p>
-
-  <ul>
-    <li><b>develop in block mode</b> — keep sources readable while testing</li>
-    <li><b>deploy in storage mode</b> — execute later from storage-backed chest data</li>
-  </ul>
-
-  <blockquote>
-    <h4><code><b>! NOTE</b></code></h4>
-    <p>Storage is only a snapshot of your source blocks taken at build time. It is <ins>not</ins> kept in sync automatically. If the source changes, rebuild storage explicitly.</p>
-  </blockquote>
-
-  <div align="left">
-    <h3>〔 <code><b>API Methods</b></code> 〕</h3>
-  </div>
-
-  <p><code>globalThis.CL.SM</code> / <code>CL.SM</code> exposes:</p>
-
-```js
-/**
- * Create a storage registry for the specified region.
- *
- * Notes:
- * - Task is queued to the internal tick worker.
- * - Coordinates are floored and bitwise-coerced to 32-bit integers.
- * - The minimum position must be `<=` the maximum position on all axes.
- * - The registry block is placed and configured at the region's minimum position.
- * - Registry slot 0 stores region metadata for later `inspect`, `build`, and `dispose` calls.
- *
- * @param {[number, number, number]} minPosition - region bottom-left corner [x, y, z]
- * @param {[number, number, number]} maxPosition - region top-right corner [x, y, z]
- * @returns {void}
- */
-create(minPosition, maxPosition)
-```
-
-```js
-/**
- * Inspect a storage registry.
- *
- * Notes:
- * - Task is queued to the internal tick worker.
- * - The registry position is validated and normalized.
- * - Registry slot 0 is read and used to log the configured storage region.
- *
- * @param {[number, number, number]} registryPosition
- * @returns {void}
- */
-inspect(registryPosition)
-```
-
-```js
-/**
- * Build storage chests within the registry region from the specified source blocks.
- *
- * Notes:
- * - Task is queued to the internal tick worker.
- * - Each container unit stores up to 4 source block entries.
- * - Container units are placed deterministically through the region after the registry position,
- *   advancing `x` first, then `z`, then `y`.
- * - Coordinates of created container units are written back into registry slots.
- * - Source text is read from `persisted.shared.text`; missing text becomes an empty string.
- * - Source text is split into raw segments so each stored item's data
- *   stays within Bloxd argument limits after JSON escaping.
- * - To rebuild existing storage properly, dispose it first and then build again.
- *
- * @param {[number, number, number]} registryPosition
- * @param {Array<[number, number, number]>} sourceBlockList
- * @param {number} [containerBudgetPerTick = 8] - Number of container units processed per tick.
- * @returns {void}
- */
-build(registryPosition, sourceBlockList, containerBudgetPerTick)
-```
-
-```js
-/**
- * Dispose storage data referenced by the registry unit.
- *
- * Notes:
- * - Task is queued to the internal tick worker.
- * - Container coordinates are read from the registry slot 1 onward.
- * - All referenced container units are removed by setting their blocks to "Air".
- * - The registry unit itself is kept, slot 0 metadata is preserved, and all other slots are cleared.
- *
- * @param {[number, number, number]} registryPosition
- * @param {number} [containerBudgetPerTick = 32] - Number of container units removed per tick.
- * @returns {void}
- */
-dispose(registryPosition, containerBudgetPerTick)
-```
-
-```js
-/**
- * Internal tick worker.
- *
- * Notes:
- * - Called automatically when the Storage Manager is enabled at startup.
- *
- * @returns {void}
- */
-_tick()
-```
-
-  <div align="left">
-    <h3>〔 <code><b>Recommended Workflow</b></code> 〕</h3>
-  </div>
-
-  <p><b>(1) Create the registry region once</b></p>
-
-```js
-CL.SM.create([minX, minY, minZ], [maxX, maxY, maxZ]);
-```
-
-  <p><b>(2) Before rebuilding existing storage, dispose it to avoid mixed data</b></p>
-
-```js
-CL.SM.dispose([registryX, registryY, registryZ]);
-```
-
-  <p><b>(3) Build storage from the current source block list</b></p>
-
-```js
-CL.SM.build([registryX, registryY, registryZ], [
-  [blockX, blockY, blockZ],
-  // ...
-]);
-```
-
-  <p><b>(4) Point the loader to that registry and enable storage mode</b></p>
-
-```js
-let config = {
-  // ...
-  sources: [
-    [registryX, registryY, registryZ],
-  ],
-  use_storage_mode: true,
-  // ...
-};
-```
-
-  <div align="left">
-    <h3>〔 <code><b>Storage Format</b></code> 〕</h3>
-  </div>
-
-  <p>This is the built-in format used by storage mode. It is mainly useful for debugging or custom tooling.</p>
-
-  <p>Storage consists of one <ins>registry unit</ins> that holds container positions and many <ins>container units</ins> that store the actual code segments. Both unit types use the <code>"Bedrock"</code> block, and data is stored in <code>"Boat"</code> items.</p>
-
-  <div align="left">
-    <h4>⊂ <code><b>Registry Unit</b></code> ⊃</h4>
-  </div>
-
-  <ul>
-    <li>In storage mode, the loader treats <code>CL.config.sources[0]</code> as the registry position</li>
-    <li>Registry slot <code>0</code> stores the region bounds in:
-      <pre><code>item.attributes.customAttributes.region = [minX, minY, minZ, maxX, maxY, maxZ]</code></pre>
-    </li>
-    <li>Registry slots <code>1..35</code> store flat arrays of container coordinates in:
-      <pre><code>item.attributes.customAttributes._</code></pre>
-    </li>
-  </ul>
-
-  <p>Container-coordinate array format:</p>
-
-```js
-[containerX0, containerY0, containerZ0, containerX1, containerY1, containerZ1, ...]
-```
-
-  <p>Each registry slot can store up to <code>243</code> numbers, which is <code>81</code> container positions.</p>
-
-  <div align="left">
-    <h4>⊂ <code><b>Container Units</b></code> ⊃</h4>
-  </div>
-
-  <ul>
-    <li>Each container has <b>4 partitions</b></li>
-    <li>Each partition corresponds to <b>1 source block</b></li>
-    <li>Each partition reserves <b>9 slots</b></li>
-  </ul>
-
-  <p>Partition-to-slot layout:</p>
-
-  <ul>
-    <li>partition <code>0</code> — slots <code>0..8</code></li>
-    <li>partition <code>1</code> — slots <code>9..17</code></li>
-    <li>partition <code>2</code> — slots <code>18..26</code></li>
-    <li>partition <code>3</code> — slots <code>27..35</code></li>
-  </ul>
-
-  <p>Each used slot stores one raw string segment in:</p>
-
-```js
-item.attributes.customAttributes._
-```
-
-  <p>During boot stage <code>12</code>, the loader concatenates the available text segments of a partition, executes the result through indirect <code>eval</code>, and then continues to the next partition.</p>
-
-</details>
-
-<hr>
-
 <a id="features"></a>
 <details open>
   <summary>
@@ -1252,26 +964,12 @@ item.attributes.customAttributes._
   </summary>
 
   <div align="left">
-    <h3>〔 <code><b>Hide World Code</b></code> 〕</h3>
+    <h3>〔 <code><b>Externalized World Code</b></code> 〕</h3>
   </div>
 
-  <p>The loader can keep real game logic outside the visible actual <code>World Code</code> field and execute it from external sources instead.</p>
+  <p>The loader can keep real game logic outside the actual <code>World Code</code> field, making it smaller and easier to manage while allowing larger projects to be structured across separate source blocks.</p>
 
-  <ul>
-    <li><b>block mode</b> uses readable source blocks and is usually the most convenient option during development</li>
-    <li><b>storage mode</b> executes from storage-backed chest data through a single registry position and is generally stronger for deployment</li>
-  </ul>
-
-  <p>This solves two practical problems at once:</p>
-
-  <ul>
-    <li>the actual <code>World Code</code> stays small and easier to manage</li>
-    <li>your main source code is no longer directly exposed to ordinary players</li>
-  </ul>
-
-  <p>Block mode still externalizes code, but its source text can remain exposed through <ins>exploit tools or client-side inspection</ins>. By contrast, storage mode is designed to make deployed source code effectively inaccessible for theft.</p>
-
-  <p>For the strongest workflow, develop in block mode and move finalized sources into storage with the built-in <a href="#storage-manager"><code><b>Storage Manager</b></code></a>.</p>
+  <p>Bloxd provides <code>Hide Code</code> feature in the <code>Lobby Moderation</code> section of the shop menu or in the settings of your published <code>Custom Game</code>, allowing both <code>World Code</code> and <code>Code Block</code> data to be strongly hidden from players without coder permissions.</p>
 
   <hr>
 
@@ -1298,7 +996,7 @@ item.attributes.customAttributes._
 
   <ul>
     <li>use <code>CL.onStart</code> for almost-immediate initialization close to <code>world code init</code>, early preprocessing, or safe configuration changes for the current boot</li>
-    <li>use <code>CL.onLoad</code> to adjust environment state after sources execute but before queued joins are replayed</li>
+    <li>use <code>CL.onLoad</code> to adjust environment state, or execute additional sources manually before queued joins are replayed</li>
     <li>use <code>CL.onEnd</code> to finish game setup, finalize environment state, or clear loader-side memory</li>
   </ul>
 
@@ -1326,7 +1024,6 @@ CL.onEnd = (context) => {
 
     if (CL.isPrimaryBoot) {
       delete config.events;
-      delete config.enable_storage_manager;
       delete config.shutdown_on_startup_error;
     }
 
@@ -1360,7 +1057,6 @@ const createProcess = function* (context) {
   
     if (CL.isPrimaryBoot) {
       delete config.events;
-      delete config.enable_storage_manager;
       delete config.shutdown_on_startup_error;
     }
   
@@ -1654,15 +1350,13 @@ let config = {
   show_error_details: true,
   show_execution_details: false,
 
-  use_storage_mode: false, //
-  execution_budget_per_tick: 8, //
+  execution_budget_per_tick: 8,
   join_budget_per_tick: 8,
 
   players_to_mark_as_joined: [],
   handlers_to_preserve: null,
   globals_to_preserve: null,
 
-  enable_storage_manager: false,
   shutdown_on_startup_error: true,
 };
 ```
@@ -1732,7 +1426,7 @@ let config = {
       <tr><td><code>8</code></td><td>release preservation setup metadata for handlers and globals</td></tr>
       <tr><td><code>9</code></td><td>build the pre-marked player set from <code>players_to_mark_as_joined</code></td></tr>
       <tr><td><code>10</code></td><td>scan online players, queue their boot joins, and mark selected players as already joined</td></tr>
-      <tr><td><code>11</code></td><td>initialize source execution state for block mode or storage mode, and expose <code>CL._bootSources</code> for report helpers</td></tr>
+      <tr><td><code>11</code></td><td>initialize source execution state and expose <code>CL._bootSources</code> for report helpers</td></tr>
       <tr><td><code>12</code></td><td>execute configured sources</td></tr>
       <tr><td><code>13</code></td><td>run <code>CL.onLoad(context)</code></td></tr>
       <tr><td><code>14</code></td><td>process queued joins and restore the final <code>onPlayerJoin</code> handler</td></tr>
@@ -1893,13 +1587,13 @@ let config = {
   </summary>
 
 ```js
-// Code Loader v2026-04-23-0001
+// Code Loader v2026-05-04-0001
 // Interruption Framework v2026-04-22-0001
 // Copyright (c) 2025-2026 delfineonx
 // SPDX-License-Identifier: Apache-2.0
 ```
 
-  <p><code>Code Loader</code>, its built-in <code>Storage Manager</code>, and the bundled <code>Interruption Framework</code> are distributed together in the same source file.</p>
+  <p><code>Code Loader</code> and the bundled <code>Interruption Framework</code> are distributed together in the same source file.</p>
 
 </details>
 
