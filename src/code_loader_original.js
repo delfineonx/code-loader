@@ -70,6 +70,7 @@ let config = {
     ["onPlayerStartChargingItem", 0],
     ["onPlayerFinishChargingItem", 0],
     ["onPlayerFinishQTE", 0],
+    ["onPlayerToggledShopMenu", 0],
     ["onPlayerBoughtShopItem", 0],
     ["doPeriodicSave", 0],
   */

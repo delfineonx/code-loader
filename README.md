@@ -372,10 +372,6 @@ if (myId == null) {
     </div>
   </summary>
 
-  <div align="left">
-    <h3>〔 <code><b>Code Loader</b></code> 〕</h3>
-  </div>
-
   <p><code>globalThis.CL</code> / <code>CL</code> exposes:</p>
 
 ```js
@@ -1503,6 +1499,7 @@ let config = {
 "onPlayerStartChargingItem",
 "onPlayerFinishChargingItem",
 "onPlayerFinishQTE",
+"onPlayerToggledShopMenu",
 "onPlayerBoughtShopItem",
 "doPeriodicSave",
 ```
@@ -1570,6 +1567,7 @@ let config = {
 ["onPlayerStartChargingItem", 0],
 ["onPlayerFinishChargingItem", 0],
 ["onPlayerFinishQTE", 0],
+["onPlayerToggledShopMenu", 0],
 ["onPlayerBoughtShopItem", 0],
 ["doPeriodicSave", 0],
 ```
